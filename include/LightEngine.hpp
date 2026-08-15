@@ -1,17 +1,17 @@
 #pragma once
 
 #include <cstddef>
-#include <functional>
-#include <map>
 #include <string>
 #include <thread>
 
-#include "RunArgs.hpp"
-#include "Timer.hpp"
-#include "WindowEventHandler.hpp"
-#include "gl/WindowFramebuffer.hpp"
-#include "gui/DrawContext.hpp"
-#include "util/Window.hpp"
+#include <RunArgs.hpp>
+#include <Timer.hpp>
+#include <WindowEventHandler.hpp>
+#include <gl/WindowFramebuffer.hpp>
+#include <gui/navigation/GuiNavigationType.hpp>
+#include <gui/screen/Screen.hpp>
+#include <render/DrawContext.hpp>
+#include <util/Window.hpp>
 
 namespace blaze::lightEngine {
 
@@ -19,7 +19,7 @@ using RenderCallback = std::function<void(DrawContext&, int, int, float)>;
 
 class LightEngine: public WindowEventHandler {
 public:
-    explicit LightEngine(RunArgs runArgs);
+    explicit LightEngine(RunArgs runArgs = RunArgs());
 
     const std::string runDirectory;
 
@@ -34,8 +34,8 @@ public:
     void setMaxUPS(int ups);
     std::string getWindowTitle();
     void setWindowTitle(std::string title);
-    WindowFramebuffer getFramebuffer();
-    DrawContext getDrawContext();
+    std::shared_ptr<WindowFramebuffer> getFramebuffer();
+    std::shared_ptr<DrawContext> getDrawContext();
     bool forcesUnicodeFont() const;
     int getFramerateLimit();
     void onResolutionChanged();
@@ -47,13 +47,22 @@ public:
     void onCursorEnterChanged();
     void onCursorPosChanged();
     const Window& getWindow() const;
+    Window& getWindow();
+    const GuiNavigationType getNavigationType();
+    static void onMouseDown(int button, double xpos, double ypos);
+    static void onMouseUp(int button, double xpos, double ypos);
     void stop();
     void close();
     void run();
-    void render(float alpha);
+    void render(float delta);
     int addRenderCallback(RenderCallback cb);
     void removeRenderCallback(int i);
     void scheduleStop();
+    void setScreen(std::unique_ptr<Screen> screen);
+    void pushScreen(std::unique_ptr<Screen> screen);
+    void popScreen();
+    Screen* getScreen() const;
+    size_t getScreenStackSize() const;
     [[nodiscard]] bool isRunning() const noexcept;
     bool shouldRenderAsync();
     double getTime();
@@ -64,12 +73,13 @@ public:
 private:
     void tick();
     void renderFrame();
-    void drawDebug();
+    void drawDebug(float delta);
 
     RunArgs runArgs;
     Window window;
-    WindowFramebuffer framebuffer;
-    DrawContext drawContext;
+    std::shared_ptr<WindowFramebuffer> framebuffer;
+    std::shared_ptr<DrawContext> drawContext;
+    std::vector<std::unique_ptr<Screen>> screenStack;
     const bool _is64Bit;
     bool running;
     bool checkIs64Bit();

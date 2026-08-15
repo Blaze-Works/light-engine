@@ -1,6 +1,11 @@
 #include <gl/Framebuffer.hpp>
 #include <gl/glad.h>
+#include <gl/ShaderPrograms.hpp>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -8,9 +13,15 @@ namespace blaze::lightEngine {
 
 Framebuffer::Framebuffer(int w, int h, bool useDepth): fbo(0), tex(0), rbo(0), w(w), h(h), useDepth(useDepth) {}
 
+Framebuffer::~Framebuffer() {
+    this->terminate();
+}
+
 void Framebuffer::initFbo(int width, int height) {
     this->w = width;
     this->h = height;
+
+    this->setShader(ShaderPrograms::POSITION_TEX);
 
     GLuint fbo;
     glGenFramebuffers(1, &fbo);
@@ -22,7 +33,7 @@ void Framebuffer::initFbo(int width, int height) {
     this->tex = tex;
     glBindTexture(GL_TEXTURE_2D, this->tex);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->w, this->h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, this->w, this->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->tex, 0);
@@ -49,7 +60,7 @@ void Framebuffer::beginWrite(bool setViewport) {
     glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
     if (setViewport) glViewport(0, 0, w, h);
 
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);
@@ -61,6 +72,13 @@ void Framebuffer::endWrite() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
+}
+
+void Framebuffer::terminate() {
+    glDeleteFramebuffers(1, &this->fbo);
+    glDeleteTextures(1, &this->tex);
+    if (this->rbo != 0) glDeleteRenderbuffers(1, &this->rbo);
+    this->valid = false;
 }
 
 GLuint Framebuffer::getTexture() {
@@ -79,11 +97,19 @@ bool Framebuffer::isValid() {
     return this->valid;
 }
 
-void Framebuffer::terminate() {
-    glDeleteFramebuffers(1, &this->fbo);
-    glDeleteTextures(1, &this->tex);
-    if (this->rbo != 0) glDeleteRenderbuffers(1, &this->rbo);
-    this->valid = false;
+void Framebuffer::setShader(std::shared_ptr<ShaderProgram> shader) {
+    this->blitShader = shader;
+
+    glGenVertexArrays(1, &this->blitVao);
+    glGenBuffers(1, &this->blitVbo);
+    glBindVertexArray(this->blitVao);
+    glBindBuffer(GL_ARRAY_BUFFER, this->blitVbo);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
 void Framebuffer::clear() {
@@ -132,33 +158,66 @@ void Framebuffer::drawFramebufferToScreen() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(0);
+    // static std::unique_ptr<ShaderProgram> blitShader;
+    // static GLuint blitVao = 0;
+    // static GLuint blitVbo = 0;
 
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glOrtho(0, this->w, this->h, 0, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
+    if (!blitShader) {
+        const std::string vertexSrc =
+            "#version 330 core\n"
+            "layout(location = 0) in vec2 aPos;\n"
+            "layout(location = 1) in vec2 aUv;\n"
+            "uniform mat4 uProjection;\n"
+            "out vec2 vUv;\n"
+            "void main() {\n"
+            "    vUv = aUv;\n"
+            "    gl_Position = uProjection * vec4(aPos, 0.0, 1.0);\n"
+            "}\n";
 
-    glEnable(GL_TEXTURE_2D);
+        const std::string fragmentSrc =
+            "#version 330 core\n"
+            "in vec2 vUv;\n"
+            "uniform sampler2D uTexture;\n"
+            "out vec4 fragColor;\n"
+            "void main() {\n"
+            "    fragColor = texture(uTexture, vUv);\n"
+            "}\n";
+
+        // blitShader = std::move(ShaderPrograms::POSITION_TEX); //std::make_unique<ShaderProgram>(vertexSrc, fragmentSrc);
+    }
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+
+    const float vertices[] = {
+        0.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, static_cast<float>(this->h), 0.0f, 0.0f,
+        static_cast<float>(this->w), static_cast<float>(this->h), 1.0f, 0.0f,
+
+        static_cast<float>(this->w), static_cast<float>(this->h), 1.0f, 0.0f,
+        static_cast<float>(this->w), 0.0f, 1.0f, 1.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
+    };
+
+    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(this->w), static_cast<float>(this->h), 0.0f, -1.0f, 1.0f);
+
+    this->blitShader->bind();
+    this->blitShader->setUniform("uProjection", projection);
+    this->blitShader->setUniform("uTexture", 0);
+    this->blitShader->setUniform("uColor", 1.0f, 1.0f, 1.0f, 1.0f);
+
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->tex);
 
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 1); glVertex2f(0, 0);
-    glTexCoord2f(1, 1); glVertex2f(this->w, 0);
-    glTexCoord2f(1, 0); glVertex2f(this->w, this->h);
-    glTexCoord2f(0, 0); glVertex2f(0, this->h);
-    glEnd();
+    glBindVertexArray(this->blitVao);
+    glBindBuffer(GL_ARRAY_BUFFER, this->blitVbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
+    this->blitShader->unbind();
 }
 
 } // namespacs blaze::lightEngine

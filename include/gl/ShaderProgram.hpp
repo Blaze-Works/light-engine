@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glad.h"
+#include <gl/glad.h>
 
 #include <glm/glm.hpp>
 #include <string>
@@ -10,7 +10,12 @@ namespace blaze::lightEngine {
 
 class ShaderProgram {
 public:
+    ShaderProgram(ShaderProgram&& other) noexcept;
+    ShaderProgram(const ShaderProgram&) = delete;
     ShaderProgram(std::string vertSrc, std::string fragSrc);
+    ShaderProgram& operator=(const ShaderProgram&) = delete;
+    ~ShaderProgram();
+
     void bind();
     void unbind();
     void bindTexture(GLuint texture);

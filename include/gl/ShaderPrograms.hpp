@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ShaderProgram.hpp"
+#include <gl/ShaderProgram.hpp>
 
 #include <memory>
 #include <string>
@@ -9,17 +9,17 @@
 namespace blaze::lightEngine {
 
 struct ShaderPrograms {
-    static std::unique_ptr<ShaderProgram> load(std::string id);
+    static std::shared_ptr<ShaderProgram> load(std::string id);
     static void init();
 
     static std::vector<ShaderProgram*> ALL;
-    static std::unique_ptr<ShaderProgram> POSITION;
-    static std::unique_ptr<ShaderProgram> POSITION_COLOR;
-    static std::unique_ptr<ShaderProgram> POSITION_TEX;
-    static std::unique_ptr<ShaderProgram> POSITION_TEX_COLOR;
-    static std::unique_ptr<ShaderProgram> POSITION_TEX_ALPHA;
-    static std::unique_ptr<ShaderProgram> PROJECTION;
-    static std::unique_ptr<ShaderProgram> PROJECTION_INDICES;
+    static std::shared_ptr<ShaderProgram> POSITION;
+    static std::shared_ptr<ShaderProgram> POSITION_COLOR;
+    static std::shared_ptr<ShaderProgram> POSITION_TEX;
+    static std::shared_ptr<ShaderProgram> POSITION_TEX_COLOR;
+    static std::shared_ptr<ShaderProgram> POSITION_TEX_ALPHA;
+    static std::shared_ptr<ShaderProgram> PROJECTION;
+    static std::shared_ptr<ShaderProgram> PROJECTION_INDICES;
 };
 
 }

@@ -1,8 +1,23 @@
 #include <util/math/MathUtils.hpp>
 
-#include <iostream>
+#include <algorithm>
+#include <random>
 
 namespace blaze::lightEngine {
+
+
+std::string MathUtils::generateUUID() {
+    static thread_local std::mt19937 rng{std::random_device{}()};
+    static thread_local std::uniform_int_distribution<int> dist(0, 15);
+    const char* hex = "0123456789abcdef";
+    std::string out;
+    out.reserve(36);
+    for (int i = 0; i < 36; i++) {
+        if (i == 8 || i == 13 || i == 18 || i == 23) out.push_back('-');
+        else out.push_back(hex[dist(rng)]);
+    }
+    return out;
+}
 
 int MathUtils::sign(int x) {
     return x < 0 ? -1 : x > 0 ? 1 : +x;

@@ -35,7 +35,7 @@ std::ifstream PathUtil::readResourceFileAsStream(const std::string& path) {
 }
 
 std::string PathUtil::readResourceFileAsString(const std::string& path) {
-    std::ifstream file(path, std::ios::binary);
+    std::ifstream file(path/*, std::ios::binary*/);
     if (!file) {
         throw std::runtime_error("File not found: " + path);
     }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Time.hpp"
+#include <util/Time.hpp>
 
 namespace blaze::lightEngine {
 

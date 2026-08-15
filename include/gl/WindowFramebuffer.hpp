@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Framebuffer.hpp"
+#include <gl/Framebuffer.hpp>
 
 #include <string>
 #include <vector>

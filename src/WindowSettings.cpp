@@ -1,4 +1,4 @@
-#include "WindowSettings.hpp"
+#include <WindowSettings.hpp>
 
 #include <sstream>
 

@@ -1,6 +1,7 @@
 #include <gl/glad.h>
 #include <string>
 #include <input/Keyboard.hpp>
+#include <input/Mouse.hpp>
 #include <util/Window.hpp>
 #include <util/Logger.hpp>
 
@@ -105,8 +106,8 @@ Window::Window(WindowEventHandler* eventHandler, WindowSettings settings, const 
 }
 
 Window::~Window() {
-    // glfwDestroyWindow(handle);
-    // glfwTerminate();
+    glfwDestroyWindow(handle);
+    glfwTerminate();
 }
 
 void Window::setupCallbacks() {
@@ -209,6 +210,10 @@ int Window::getX() {
 
 int Window::getY() {
     return this->y;
+}
+
+float Window::getAspectRatio() {
+    return (float)this->width / (float) this->height;
 }
 
 bool Window::getCursorEnterState() {
@@ -316,7 +321,6 @@ int Window::calculateScaleFactor(int guiScale, bool forceUnicodeFont) {
 }
 
 void Window::onFramebufferSizeChanged(GLFWwindow* window, int width, int height) {
-    // LOG_DEBUG("EVENT_FRAMEBUFFER");
     Window* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (self && self->eventHandler) {
         self->framebufferWidth = width > 0 ? width : 1;
@@ -326,7 +330,6 @@ void Window::onFramebufferSizeChanged(GLFWwindow* window, int width, int height)
 }
 
 void Window::onWindowPosChanged(GLFWwindow* window, int x, int y) {
-    // LOG_DEBUG("EVENT_POS");
     Window* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (self) {
         self->x = x;
@@ -335,7 +338,6 @@ void Window::onWindowPosChanged(GLFWwindow* window, int x, int y) {
 }
 
 void Window::onWindowSizeChanged(GLFWwindow* window, int width, int height) {
-    // LOG_DEBUG("EVENT_SIZE");
     Window* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (self) {
         self->width = width > 0 ? width : 1;
@@ -346,7 +348,6 @@ void Window::onWindowSizeChanged(GLFWwindow* window, int width, int height) {
 }
 
 void Window::onWindowFocusChanged(GLFWwindow* window, int focused) {
-    // LOG_DEBUG("EVENT_FOCUS");
     Window* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (self && self->eventHandler) {
         self->eventHandler->onWindowFocusChanged(focused != 0);
@@ -354,11 +355,9 @@ void Window::onWindowFocusChanged(GLFWwindow* window, int focused) {
 }
 
 void Window::onCursorEnterChanged(GLFWwindow* window, int entered) {
-    // LOG_DEBUG("EVENT_ENTERED");
     Window* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (self) {
         self->cursorEntered = entered != 0;
-        // LOG_DEBUG(std::to_string(entered));
         if (self->eventHandler) {
             self->eventHandler->onCursorEnterChanged();
         }
@@ -366,7 +365,6 @@ void Window::onCursorEnterChanged(GLFWwindow* window, int entered) {
 }
 
 void Window::onCursorPosChanged(GLFWwindow* window, double mouseX, double mouseY) {
-    // LOG_DEBUG("EVENT_C_POS");
     Window* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (self) {
         self->mouseX = mouseX;
@@ -374,11 +372,12 @@ void Window::onCursorPosChanged(GLFWwindow* window, double mouseX, double mouseY
         if (self->eventHandler) {
             self->eventHandler->onCursorPosChanged();
         }
+
+        for (std::function<void(double, double)> l : self->mouseMoveListeners) l(mouseX, mouseY);
     }
 }
 
 void Window::onMinimizeChanged(GLFWwindow* window, int minimized) {
-    // LOG_DEBUG("EVENT_MINI");
     Window* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (self) {
         self->minimized = minimized != 0;
@@ -386,23 +385,38 @@ void Window::onMinimizeChanged(GLFWwindow* window, int minimized) {
 }
 
 void Window::onMouseButtonListeners(GLFWwindow* window, int button, int action, int mods) {
-    // LOG_DEBUG("EVENT");
-    (void)button;
-    (void)action;
-    (void)mods;
-    (void)window;
+    Window* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+    if (self) {
+        double xpos[1];
+        double ypos[1];
+        glfwGetCursorPos(window, xpos, ypos);
+
+        if (action == GLFW_PRESS) {
+            for (std::function<void(int, double, double)> l : self->mouseDownListeners) l(button, xpos[0], ypos[0]);
+        } else if (action == GLFW_RELEASE) {
+            for (std::function<void(int, double, double)> l : self->mouseUpListeners) l(button, xpos[0], ypos[0]);
+        }
+    }
+
+    Mouse::mouseButtonCallback(window, button, action, mods);
 }
 
 void Window::onKeyListeners(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    (void)window;
-    (void)scancode;
-    (void)mods;
+    Window* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+    if (self) {
+        if (action == GLFW_PRESS) {
+            for (std::function<void(int)> l : self->keyDownListeners) l(key);
+        } else if (action == GLFW_RELEASE) {
+            for (std::function<void(int)> l : self->keyUpListeners) l(key);
+        }
+    }
 
     Keyboard::keyCallback(window, key, scancode, action, mods);
 }
 
 void Window::onMouseMoveListeners(GLFWwindow* window, double xpos, double ypos) {
-    // LOG_DEBUG("EVENT_MOVE");
     Window* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
     if (self) {
         self->mouseX = xpos;
@@ -414,14 +428,14 @@ void Window::onMouseMoveListeners(GLFWwindow* window, double xpos, double ypos) 
 }
 
 void Window::onMouseWheelListeners(GLFWwindow* window, double xoffset, double yoffset) {
-    // LOG_DEBUG("EVENT_WHEEL");
-    (void)window;
-    (void)xoffset;
-    (void)yoffset;
+    Window* self = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+    if (self) {
+        for (std::function<void(double, double)> l : self->mouseScrollListeners) l(xoffset, yoffset);
+    }
 }
 
 void Window::clear() const {
-    // LOG_DEBUG("CLEAR");
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
@@ -430,9 +444,93 @@ void Window::throwGlError(int error, const char* description) {
     LOG_ERROR(std::string("GLFW Error (") + std::to_string(error) + ") " + description);
 }
 
-void Window::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
+void Window::onKeyDown(WindowKeyDownfun listener) {
+    this->keyDownListeners.push_back(listener);
+}
+
+void Window::onKeyUp(WindowKeyUpfun listener) {
+    this->keyUpListeners.push_back(listener);
+}
+
+void Window::onMouseDown(WindowMouseDownfun listener) {
+    this->mouseDownListeners.push_back(listener);
+}
+
+void Window::onMouseMove(WindowMouseMovefun listener) {
+    this->mouseMoveListeners.push_back(listener);
+}
+
+void Window::onMouseUp(WindowMouseUpfun listener) {
+    this->mouseUpListeners.push_back(listener);
+}
+
+void Window::onMouseScroll(WindowMouseScrollfun listener) {
+    this->mouseScrollListeners.push_back(listener);
+}
+
+void Window::offKeyDown(WindowKeyDownfun listener) {
+    auto it = std::find_if(this->keyDownListeners.begin(), this->keyDownListeners.end(), [listener](const std::function<void(int)>& fn) {
+        auto* const* target_ptr = fn.target<WindowKeyDownfun>();
+        return target_ptr && (*target_ptr == listener);
+    });
+
+    if (it != this->keyDownListeners.end()) {
+        this->keyDownListeners.erase(it);
+    }
+}
+
+void Window::offKeyUp(WindowKeyUpfun listener) {
+    auto it = std::find_if(this->keyUpListeners.begin(), this->keyUpListeners.end(), [listener](const std::function<void(int)>& fn) {
+        auto* const* target_ptr = fn.target<WindowKeyUpfun>();
+        return target_ptr && (*target_ptr == listener);
+    });
+
+    if (it != this->keyUpListeners.end()) {
+        this->keyUpListeners.erase(it);
+    }
+}
+
+void Window::offMouseDown(WindowMouseDownfun listener) {
+    auto it = std::find_if(this->mouseDownListeners.begin(), this->mouseDownListeners.end(), [listener](const std::function<void(int, double, double)>& fn) {
+        auto* const* target_ptr = fn.target<WindowMouseDownfun>();
+        return target_ptr && (*target_ptr == listener);
+    });
+
+    if (it != this->mouseDownListeners.end()) {
+        this->mouseDownListeners.erase(it);
+    }
+}
+
+void Window::offMouseMove(WindowMouseMovefun listener) {
+    auto it = std::find_if(this->mouseMoveListeners.begin(), this->mouseMoveListeners.end(), [listener](const std::function<void(double, double)>& fn) {
+        auto* const* target_ptr = fn.target<WindowMouseMovefun>();
+        return target_ptr && (*target_ptr == listener);
+    });
+
+    if (it != this->mouseMoveListeners.end()) {
+        this->mouseMoveListeners.erase(it);
+    }
+}
+
+void Window::offMouseUp(WindowMouseUpfun listener) {
+    auto it = std::find_if(this->mouseUpListeners.begin(), this->mouseUpListeners.end(), [listener](const std::function<void(int, double, double)>& fn) {
+        auto* const* target_ptr = fn.target<WindowMouseUpfun>();
+        return target_ptr && (*target_ptr == listener);
+    });
+
+    if (it != this->mouseUpListeners.end()) {
+        this->mouseUpListeners.erase(it);
+    }
+}
+
+void Window::offMouseScroll(WindowMouseScrollfun listener) {
+    auto it = std::find_if(this->mouseScrollListeners.begin(), this->mouseScrollListeners.end(),[listener](const std::function<void(double, double)>& fn) {
+        auto* const* target_ptr = fn.target<WindowMouseScrollfun>();
+        return target_ptr && (*target_ptr == listener);
+    });
+
+    if (it != this->mouseScrollListeners.end()) {
+        this->mouseScrollListeners.erase(it);
     }
 }
 

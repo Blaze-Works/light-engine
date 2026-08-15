@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Window.hpp"
+#include <util/Window.hpp>
 
 namespace blaze::lightEngine {
 

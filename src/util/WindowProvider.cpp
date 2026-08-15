@@ -1,4 +1,4 @@
-#include "util/WindowProvider.hpp"
+#include <util/WindowProvider.hpp>
 
 namespace blaze::lightEngine {
 

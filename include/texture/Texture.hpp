@@ -1,5 +1,5 @@
 #pragma once
-#include "../gl/glad.h"
+#include <gl/glad.h>
 
 namespace blaze::lightEngine {
 
@@ -7,10 +7,9 @@ class Texture {
 public:
     const GLuint id;
     Texture();
-    ~Texture();
+    ~Texture() = default;
     void bind();
     void unbind();
-    void terminate();
     void setParameter(int name, int value);
     void uploadData(int width, int height, unsigned char* data);
     void uploadData(int internalFormat, int width, int height, int format, unsigned char* data);

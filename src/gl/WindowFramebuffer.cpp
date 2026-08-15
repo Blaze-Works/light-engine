@@ -1,6 +1,5 @@
 #include <gl/WindowFramebuffer.hpp>
 #include <texture/TextureUtil.hpp>
-#include <util/Logger.hpp>
 
 #include <string>
 
@@ -52,15 +51,11 @@ std::string Size::toString() {
     return std::to_string(this->width) + "x" + std::to_string(this->height);
 }
 
-WindowFramebuffer::WindowFramebuffer(int width, int height): Framebuffer(width, height, true) {
-    this->init(width, height);
-}
+WindowFramebuffer::WindowFramebuffer(int width, int height): Framebuffer(width, height, true) {}
 
 void WindowFramebuffer::init(int width, int height) {
     Size* size;
     size = this->findSuitableSize(width, height);
-
-    LOG_DEBUG("[WindowFramebuffer]: InitFBO w: " + std::to_string(size->width) + " h: " + std::to_string(size->height));
 
     this->viewportWidth = size->width;
     this->viewportHeight = size->height;

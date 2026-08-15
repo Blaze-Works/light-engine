@@ -1,6 +1,7 @@
 #pragma once
 
-#include "glad.h"
+#include <gl/glad.h>
+#include <gl/ShaderProgram.hpp>
 
 namespace blaze::lightEngine {
 
@@ -9,8 +10,12 @@ public:
     GLuint fbo;
     GLuint tex;
     GLuint rbo;
+    GLuint blitVao;
+    GLuint blitVbo;
 
     Framebuffer(int w, int h, bool usedepth);
+    ~Framebuffer();
+
     void initFbo(int width, int height);
     void beginWrite(bool setViewport);
     void endWrite();
@@ -19,6 +24,7 @@ public:
     int getWidth();
     int getHeight();
     bool isValid();
+    void setShader(std::shared_ptr<ShaderProgram> shader);
     void clear();
     void resize(int width, int height);
     void checkFramebufferStatus();
@@ -29,6 +35,7 @@ private:
     int h;
     bool valid;
     bool useDepth;
+    std::shared_ptr<ShaderProgram> blitShader;
 };
 
 } // namespace blaze::lightEngine

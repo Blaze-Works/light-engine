@@ -1,5 +1,5 @@
 #include <color/Argb.hpp>
-#include <gui/DrawContext.hpp>
+#include <render/DrawContext.hpp>
 #include <text/TextRenderer.hpp>
 #include <texture/Texture.hpp>
 #include <texture/TextureUtil.hpp>
@@ -31,10 +31,6 @@ TextRenderer::TextRenderer(const std::string& fontPath, int size, bool antiAlias
 
     FT_Done_Face(face);
     FT_Done_FreeType(library);
-}
-
-TextRenderer::~TextRenderer() {
-    if (this->texture->id != 0) this->texture->terminate();
 }
 
 Texture TextRenderer::createFontTexture(FT_Face face, bool antiAlias) {
@@ -210,12 +206,12 @@ void TextRenderer::drawTextInternal(DrawContext* context, std::string& text, flo
         if (glyph.width > 0 && glyph.height > 0) {
             vertices.insert(vertices.end(), {
                 x1, y1, s1, t2,
+                x1, y2, s1, t1,
+                x2, y2, s2, t1,
+                
+                x2, y2, s2, t1,
                 x2, y1, s2, t2,
-                x2, y2, s2, t1,
-
-                x2, y2, s2, t1,
                 x1, y1, s1, t2,
-                x1, y2, s1, t1
             });
         }
 

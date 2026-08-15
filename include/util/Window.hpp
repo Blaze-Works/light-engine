@@ -1,21 +1,24 @@
 #pragma once
 
-#include "../WindowEventHandler.hpp"
-#include "../WindowSettings.hpp"
+#include <WindowEventHandler.hpp>
+#include <WindowSettings.hpp>
 
 #include <GLFW/glfw3.h>
+#include <functional>
 #include <string>
+#include <vector>
 
 typedef void (* WindowKeyDownfun)(int keycode);
 typedef void (* WindowKeyUpfun)(int keycode);
 typedef void (* WindowMouseScrollfun)(double xoffset, double yoffset);
 typedef void (* WindowMouseDownfun)(int button, double xpos, double ypos);
 typedef void (* WindowMouseMovefun)(double xpos, double ypos);
-typedef void (* WindowMouseUpfun)(double xpos, double ypos);
+typedef void (* WindowMouseUpfun)(int, double xpos, double ypos);
 
 namespace blaze::lightEngine {
 
 class Window {
+
 public:
     Window(WindowEventHandler* eventHandler, WindowSettings settings, const std::string& title);
     ~Window();
@@ -43,6 +46,7 @@ public:
     int getScaledHeight();
     int getX();
     int getY();
+    float getAspectRatio();
     bool getCursorEnterState();
     double getMouseX();
     double getMouseY();
@@ -54,6 +58,7 @@ public:
     bool isVsyncEnabled();
     void setScaleFactor(double scaleFactor);
     int calculateScaleFactor(int guiScale, bool forceUnicode);
+
     void onKeyDown(WindowKeyDownfun callback);
     void onKeyUp(WindowKeyUpfun callback);
     void onMouseDown(WindowMouseDownfun callback);
@@ -66,6 +71,7 @@ public:
     void offMouseMove(WindowMouseMovefun callback);
     void offMouseUp(WindowMouseUpfun callback);
     void offMouseScroll(WindowMouseScrollfun callback);
+
     double getScaleFactor();
     void clear() const;
 
@@ -102,6 +108,13 @@ private:
     void updateFullScreen(bool vsync);
     void setVsync(bool vsync);
     void updateWindowRegion();
+
+    std::vector<std::function<void(int)>> keyDownListeners;
+    std::vector<std::function<void(int)>> keyUpListeners;
+    std::vector<std::function<void(double, double)>> mouseScrollListeners;
+    std::vector<std::function<void(int, double, double)>> mouseDownListeners;
+    std::vector<std::function<void(double, double)>> mouseMoveListeners;
+    std::vector<std::function<void(int, double, double)>> mouseUpListeners;
 
     static void onFramebufferSizeChanged(GLFWwindow* handle, int width, int height);
     static void onWindowPosChanged(GLFWwindow* handle, int x, int y);

@@ -7,6 +7,10 @@
 
 namespace blaze::lightEngine {
 
+ShaderProgram::ShaderProgram(ShaderProgram&& other) noexcept: programId(other.programId), uniforms(std::move(other.uniforms)), activeTexture(other.activeTexture) {
+    const_cast<GLuint&>(other.programId) = 0;
+}
+
 ShaderProgram::ShaderProgram(std::string vertSrc, std::string fragSrc): programId(glCreateProgram()) {
     GLuint vs = ShaderLoader::compile(GL_VERTEX_SHADER, vertSrc.c_str());
     GLuint fs = ShaderLoader::compile(GL_FRAGMENT_SHADER, fragSrc.c_str());
@@ -26,6 +30,10 @@ ShaderProgram::ShaderProgram(std::string vertSrc, std::string fragSrc): programI
     glDeleteShader(vs);
     glDeleteShader(fs);
     this->activeTexture = 0;
+}
+
+ShaderProgram::~ShaderProgram() {
+    if (programId) glDeleteProgram(this->programId);
 }
 
 void ShaderProgram::bind() {

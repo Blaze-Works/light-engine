@@ -1,4 +1,4 @@
-#include "color/Argb.hpp"
+#include <color/Argb.hpp>
 
 namespace blaze::lightEngine {
 

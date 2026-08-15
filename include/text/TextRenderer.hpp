@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../texture/Texture.hpp"
+#include <texture/Texture.hpp>
 
 #include <map>
 #include <memory>
@@ -25,13 +25,8 @@ class DrawContext;
 
 class TextRenderer {
 public:
-//    TextRenderer();
-//    TextRenderer(bool antiAlias);
-//    TextRenderer(int size);
-//    TextRenderer(int size, bool antiAlias);
-//    TextRenderer(const std::string& fontPath, int size);
     TextRenderer(const std::string& fontPath, int size, bool antiAlias);
-    ~TextRenderer();
+    ~TextRenderer() = default;
     Texture createFontTexture(FT_Face face, bool antiAlias);
     int getWidth(const std::string& text);
     int getHeight(const std::string& text);

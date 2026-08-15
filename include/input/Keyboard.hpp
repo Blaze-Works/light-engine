@@ -14,7 +14,7 @@ public:
     static bool isPressed(int key);
     static bool wasJustPressed(int key);
     static bool wasJustReleased(int key);
-    // static bool isComboPressed(int... comboKeys);
+    static bool isComboPressed(int comboKeys...);
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
     static const int Esc = GLFW_KEY_ESCAPE;
