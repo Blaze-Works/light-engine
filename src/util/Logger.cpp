@@ -53,7 +53,7 @@ std::string Logger::formatLog(LogLevel level, std::string_view message) {
 	
 	std::ostringstream ss;
 	ss << "[" << std::put_time(&timeTm, "%Y-%m-%d %H:%M:%S") << "] "
-       << "[" << levelToString(level) << "] " << message;
+	   << "[" << levelToString(level) << "] " << message;
 	   
 	return ss.str();
 }

@@ -3,11 +3,11 @@
 namespace blaze::lightEngine {
 
 std::shared_ptr<GuiNavigationPath> Element::getFocusedPath() const {
-    return nullptr;
+	return nullptr;
 }
 
 ScreenRect Element::getNavigationFocus() const {
-    return ScreenRect::empty();
+	return ScreenRect::empty();
 }
 
 } // namespace blaze::lightEngine

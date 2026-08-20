@@ -6,16 +6,16 @@ namespace blaze::lightEngine {
 
 class Clock {
 public:
-    Clock();
-    ~Clock();
+	Clock();
+	~Clock();
 
-    void reset();
-    Time getElapsedTime();
-    Time restart();
-    long getTime();
+	void reset();
+	Time getElapsedTime();
+	Time restart();
+	long getTime();
 
 private:
-    long startTime;
+	long startTime;
 
 };
 

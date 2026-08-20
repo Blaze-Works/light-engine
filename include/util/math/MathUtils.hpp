@@ -12,13 +12,13 @@ namespace blaze::lightEngine {
 
 class MathUtils {
 public:
-    static std::string generateUUID();
-    static int sign(int x);
-    static double sign(double x);
-    static float sign(float x);
-    static float clamp(float value, float min, float max);
-    static double clamp(double value, double min, double max);
-    static int clamp(int value, int min, int max);
+	static std::string generateUUID();
+	static int sign(int x);
+	static double sign(double x);
+	static float sign(float x);
+	static float clamp(float value, float min, float max);
+	static double clamp(double value, double min, double max);
+	static int clamp(int value, int min, int max);
 };
 
 } // namespace blaze::lightEngind

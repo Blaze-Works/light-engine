@@ -1,19 +1,83 @@
-CMakeLists.txt.user
+# ==========================================
+# Compiled Objects and Binaries
+# ==========================================
+*.o
+*.obj
+*.gch
+*.pch
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+*.a
+*.lib
+*.la
+*.lai
+
+# ==========================================
+# Build Directories
+# ==========================================
+build/
+Build/
+build-*/
+out/
+bin/
+x64/
+Win32/
+Release/
+Debug/
+
+# ==========================================
+# CMake Generated Files
+# ==========================================
 CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-Makefile
+CMakeFiles/
+CMakeCheckOutputs/
 cmake_install.cmake
+Makefile
 install_manifest.txt
 compile_commands.json
-CTestTestfile.cmake
-_deps
-CMakeUserPresets.json
 
-# CLion
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#cmake-build-*
+# ==========================================
+# IDEs and Text Editors
+# ==========================================
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sln.docstates
+*.opensdf
+*.sdf
+*.aps
+
+# CLion / JetBrains
+.idea/
+cmake-build-*/
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Xcode
+*.mode1v3
+*.mode2v3
+*.storyboardc
+*.pbxuser
+!default.pbxuser
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+
+# ==========================================
+# Temp Files and Logs
+# ==========================================
+*.tmp
+*.log
+*.bak
+*.swp
+*~
+

@@ -1,59 +1,67 @@
-#include <LightEngine.hpp>
+	#include <LightEngine.hpp>
 #include <input/Keyboard.hpp>
+#include <memory>
 #include <object/camera/PerspectiveCamera.hpp>
-#include <object/BufferGeometry.hpp>
-#include <object/Scene.hpp>
 #include <render/Renderer3D.hpp>
+#include <util/PathUtil.hpp>
+#include <util/math/MathUtils.hpp>
 
 #include <iostream>
 
 namespace bl = blaze::lightEngine;
 
-static bl::LightEngine* g_engine = nullptr;
+static bl::LightEngine* g_engine;
 bl::Renderer3D renderer;
 bl::Scene scene;
 bl::PerspectiveCamera camera(75, 0, 0.1f, 1000);
+bl::Mesh* cube;
+bl::Mesh* plane;
 
-void init() {
-    float aspect = g_engine->getWindow().getAspectRatio();
+auto geo = std::make_shared<bl::BufferGeometry>(bl::BufferGeometry::box(1, 1, 1));
+auto mat = std::make_shared<bl::Material>(0xFF4CAF50);
 
-    renderer.init();
+void init(bl::Window& window) {
+	float aspect = window.getAspectRatio();
 
-    camera.setAspect(aspect);
-    camera.position = {0, 0, 3};
-    camera.lookAt(0, 0, 0);
+	renderer.init();
 
-    scene.background = 0xFF1A1A2E;
+	camera.setAspect(aspect);
+	camera.position = {2, 4, 3};
+	camera.lookAt(0, 0, 0);
 
-    auto geo = std::make_shared<bl::BufferGeometry>(bl::BufferGeometry::box(1, 1, 1));
-    auto mat = std::make_shared<bl::Material>(0xFF4CAF50);
-    auto* cube = scene.create<bl::Mesh>(geo, mat);
-    cube->position = {0, 0, 0};
+	scene.background = 0xFF1A1A2E;
 
-    g_engine->getWindow().onKeyUp([](int key) {
-        if (key == bl::Keyboard::Esc && g_engine) g_engine->scheduleStop();
-    });
+	cube = scene.create<bl::Mesh>(geo, mat);
+
+	cube->position = {0, 0, 0};
+
+	window.onKeyUp([](int key) {
+		if (key == bl::Keyboard::Esc && g_engine) g_engine->scheduleStop();
+	});
+}
+
+void update(float delta) {
+	cube->rotateY(delta).rotateX(delta);
 }
 
 void render(bl::DrawContext& ctx, int x, int y, float delta) {
-    bl::Mesh* cube = static_cast<bl::Mesh*>(scene.children.back());
-    cube->rotateY(0.06f).rotateX(0.06f);
-    renderer.render(scene, camera);
+	renderer.render(scene, camera);
 }
 
 int main() {
-    bl::LightEngine engine;
-    g_engine = &engine;
-    engine.initialize();
+	bl::LightEngine engine;
+	g_engine = &engine;
+	engine.initialize();
 
-    init();
-    engine.addRenderCallback(render);
-    engine.run();
+	init(engine.getWindow());
+	engine.addRenderCallback(render);
+	engine.addUpdateCallback(update);
+	engine.run();
 
-    if (!engine.isRunning()) {
-        std::cout << "engine shutdown: okay" << std::endl;
-        return 0;
-    }
+	if (!engine.isRunning()) {
+		std::cout << "engine shutdown: okay" << std::endl;
+		return 0;
+	}
 
-    return 1;
+	return 1;
 }

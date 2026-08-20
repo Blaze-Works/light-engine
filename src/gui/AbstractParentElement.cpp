@@ -5,27 +5,27 @@ namespace blaze::lightEngine {
 AbstractParentElement::AbstractParentElement() = default;
 
 bool AbstractParentElement::isDragging() const {
-    return this->dragging;
+	return this->dragging;
 }
 
 void AbstractParentElement::setDragging(bool dragging) {
-    this->dragging = dragging;
+	this->dragging = dragging;
 }
 
 Element* AbstractParentElement::getFocused() const {
-    return this->focused;
+	return this->focused;
 }
 
 void AbstractParentElement::setFocused(Element* focused) {
-    if (this->focused != nullptr) {
-        this->focused->setFocused(false);
-    }
+	if (this->focused != nullptr) {
+		this->focused->setFocused(false);
+	}
 
-    if (focused != nullptr) {
-        focused->setFocused(true);
-    }
+	if (focused != nullptr) {
+		focused->setFocused(true);
+	}
 
-    this->focused = focused;
+	this->focused = focused;
 }
 
 } // namespace blaze::lightEngine

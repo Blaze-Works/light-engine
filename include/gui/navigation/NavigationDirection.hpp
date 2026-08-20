@@ -7,10 +7,10 @@ namespace blaze::lightEngine {
 enum class NavigationAxis;
 
 enum class NavigationDirection {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT
 };
 
 NavigationDirection getOpposite(NavigationDirection direction);

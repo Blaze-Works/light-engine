@@ -3,10 +3,10 @@
 namespace blaze::lightEngine {
 
 enum class GuiNavigationType {
-    NONE,
-    MOUSE,
-    KEYBOARD_ARROW,
-    KEYBOARD_TAB
+	NONE,
+	MOUSE,
+	KEYBOARD_ARROW,
+	KEYBOARD_TAB
 };
 
 bool isMouse(GuiNavigationType type);

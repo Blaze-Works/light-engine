@@ -5,8 +5,8 @@
 namespace blaze::lightEngine {
 
 enum class NavigationAxis {
-    HORIZONTAL,
-    VERTICAL
+	HORIZONTAL,
+	VERTICAL
 };
 
 NavigationAxis getOther(NavigationAxis axis);

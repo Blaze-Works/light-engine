@@ -7,6 +7,6 @@ uniform vec4 uColor;
 out vec4 FragColor;
 
 void main() {
-    if (uColor.a == 0.0) discard;
-    FragColor = uColor;
+	if (uColor.a == 0.0) discard;
+	FragColor = uColor;
 }

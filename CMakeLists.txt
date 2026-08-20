@@ -12,31 +12,31 @@ find_package(glm REQUIRED)
 find_package(FreeType QUIET)
 
 if (NOT Freetype_FOUND)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(FREETYPE REQUIRED freetype2)
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(FREETYPE REQUIRED freetype2)
 
-    add_library(Freetype::Freetype INTERFACE IMPORTED)
-    target_include_directories(Freetype::Freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
-    target_link_libraries(Freetype::Freetype INTERFACE ${FREETYPE_LIBRARIES})
+	add_library(Freetype::Freetype INTERFACE IMPORTED)
+	target_include_directories(Freetype::Freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
+	target_link_libraries(Freetype::Freetype INTERFACE ${FREETYPE_LIBRARIES})
 endif()
 
-file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.c")
+file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.c" "examples/multithreaded/*.cpp")
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${GLFW_INCLUDE_DIRS}
-    ${OPENGL_INCLUDE_DIR}
-    ${X11_INCLUDE_DIRS}
+	${OPENGL_INCLUDE_DIR}
+	${X11_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
-    ${GLFW_LIBRARIES} 
-    OpenGL::GL 
-    Freetype::Freetype
-    glm::glm
-    m 
-    X11 
-    Xrandr 
-    Xi
+	${GLFW_LIBRARIES} 
+	OpenGL::GL 
+	Freetype::Freetype
+	glm::glm
+	m 
+	X11 
+	Xrandr 
+	Xi
 )

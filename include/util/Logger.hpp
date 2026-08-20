@@ -13,29 +13,29 @@
 namespace blaze::lightEngine {
 
 enum class LogLevel {
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR
+	DEBUG,
+	INFO,
+	WARN,
+	ERROR
 };
 
 class Logger {
 public:
-    static Logger& getInstance() noexcept;
-    Logger(const Logger&) = delete;
-    Logger& operator = (const Logger&) = delete;
-    void setOutputFile(const std::string& filename);
-    void log(LogLevel level, std::string_view message);
+	static Logger& getInstance() noexcept;
+	Logger(const Logger&) = delete;
+	Logger& operator = (const Logger&) = delete;
+	void setOutputFile(const std::string& filename);
+	void log(LogLevel level, std::string_view message);
 
 private:
-    Logger() = default;
-    ~Logger();
-    std::ofstream m_fileStream;
-    std::mutex m_mutex;
-    std::string_view levelToString(LogLevel level);
-    std::string formatLog(LogLevel level, std::string_view message);
+	Logger() = default;
+	~Logger();
+	std::ofstream m_fileStream;
+	std::mutex m_mutex;
+	std::string_view levelToString(LogLevel level);
+	std::string formatLog(LogLevel level, std::string_view message);
 
-    static Logger* instance;
+	static Logger* instance;
 };
 
 

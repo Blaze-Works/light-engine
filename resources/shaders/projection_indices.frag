@@ -12,18 +12,18 @@ uniform vec3 uLightDir;
 out vec4 FragColor;
 
 void main() {
-    vec3 N = normalize(vNormal);
-    vec3 L = normalize(-uLightDir);
+	vec3 N = normalize(vNormal);
+	vec3 L = normalize(-uLightDir);
 
-    float diff = max(dot(N, L), 0.0);
-    float ambient = 0.25;
-    float lighting = ambient + diff * 0.75;
-    vec4 base = uColor;
+	float diff = max(dot(N, L), 0.0);
+	float ambient = 0.25;
+	float lighting = ambient + diff * 0.75;
+	vec4 base = uColor;
 
-    if (uHasTexture) {
-        base *= texture(uTexture, vUv);
-    }
+	if (uHasTexture) {
+		base *= texture(uTexture, vUv);
+	}
 
-    FragColor = vec4(base.rgb * lighting, base.a);
-    if (FragColor.a < 0.01) discard;
+	FragColor = vec4(base.rgb * lighting, base.a);
+	if (FragColor.a < 0.01) discard;
 }
