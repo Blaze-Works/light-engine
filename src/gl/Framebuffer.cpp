@@ -13,10 +13,6 @@ namespace blaze::lightEngine {
 
 Framebuffer::Framebuffer(int w, int h, bool useDepth): fbo(0), tex(0), rbo(0), w(w), h(h), useDepth(useDepth) {}
 
-Framebuffer::~Framebuffer() {
-	this->terminate();
-}
-
 void Framebuffer::initFbo(int width, int height) {
 	this->w = width;
 	this->h = height;

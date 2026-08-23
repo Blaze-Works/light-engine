@@ -16,21 +16,21 @@ std::shared_ptr<ShaderProgram> ShaderPrograms::load(std::string id) {
 void ShaderPrograms::init() {
 	if (POSITION != nullptr) return;
 
+	ShaderPrograms::MESH               = ShaderPrograms::load("mesh");
 	ShaderPrograms::POSITION           = ShaderPrograms::load("position");
 	ShaderPrograms::POSITION_TEX       = ShaderPrograms::load("position_tex");
 	ShaderPrograms::POSITION_COLOR     = ShaderPrograms::load("position_color");
 	ShaderPrograms::POSITION_TEX_COLOR = ShaderPrograms::load("position_tex_color");
 	ShaderPrograms::POSITION_TEX_ALPHA = ShaderPrograms::load("position_tex_alpha");
 	ShaderPrograms::PROJECTION         = ShaderPrograms::load("projection");
-	ShaderPrograms::PROJECTION_INDICES = ShaderPrograms::load("projection_indices");
 }
 
+std::shared_ptr<ShaderProgram> ShaderPrograms::MESH                = nullptr;
 std::shared_ptr<ShaderProgram> ShaderPrograms::POSITION           = nullptr;
 std::shared_ptr<ShaderProgram> ShaderPrograms::POSITION_COLOR     = nullptr;
 std::shared_ptr<ShaderProgram> ShaderPrograms::POSITION_TEX       = nullptr;
 std::shared_ptr<ShaderProgram> ShaderPrograms::POSITION_TEX_COLOR = nullptr;
 std::shared_ptr<ShaderProgram> ShaderPrograms::POSITION_TEX_ALPHA = nullptr;
 std::shared_ptr<ShaderProgram> ShaderPrograms::PROJECTION         = nullptr;
-std::shared_ptr<ShaderProgram> ShaderPrograms::PROJECTION_INDICES = nullptr;
 
 } // namespace blaze::lightEngine

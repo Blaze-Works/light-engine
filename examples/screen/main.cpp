@@ -43,9 +43,8 @@ public:
 int main() {
 	bl::LightEngine engine;
 	engine.initialize();
-	bl::PathUtil::setResourceDir("./");
 
-	engine.getDrawContext()->loadFont(bl::PathUtil::resolveResource("segoe.ttf"));
+	engine.getDrawContext()->loadFont(bl::PathUtil::resolveResource("fonts/segoe.ttf"));
 	engine.setScreen(std::make_unique<TitleScreen>());
 
 	engine.getWindow().onKeyUp([](int key) {

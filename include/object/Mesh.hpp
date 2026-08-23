@@ -2,7 +2,7 @@
 
 #include <object/BufferGeometry.hpp>
 #include <object/Material.hpp>
-#include <object/Object3D.hpp>
+#include <object/Skin.hpp>
 
 #include <gl/glad.h>
 #include <memory>
@@ -13,6 +13,7 @@ class Mesh : public Object3D {
 public:
 	std::shared_ptr<BufferGeometry> geometry;
 	std::shared_ptr<Material> material;
+	std::shared_ptr<Skin> skin;
 
 	Mesh() = default;
 	Mesh(std::shared_ptr<BufferGeometry> geometry, std::shared_ptr<Material> material);
@@ -25,19 +26,30 @@ public:
 	void draw() const;
 	void dispose();
 
-	bool isUploaded() const { return uploaded; }
+	bool isUploaded() const { return this->uploaded; }
+	bool isSkinned() const { return this->skin != nullptr && this->hasJoints; }
+
+	BoundingSphere getWorldBoundingSphere() const;
+	BoundingBox getWorldBoundingBox() const;
+
+protected:
+	BoundingBox computeLocalBoundingBox() const override;
 
 private:
 	GLuint vao = 0;
 	GLuint vboPosition = 0;
 	GLuint vboNormal = 0;
 	GLuint vboUv = 0;
+	GLuint vboJoints = 0;
+	GLuint vboWeights = 0;
 	GLuint ebo = 0;
 	GLsizei indexCount = 0;
 	GLsizei vertexCount = 0;
 	bool hasIndex = false;
 	bool hasNormal = false;
 	bool hasUv = false;
+	bool hasJoints = false;
+	bool hasWeights = false;
 	bool uploaded = false;
 
 	void createBuffers();

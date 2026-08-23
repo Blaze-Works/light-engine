@@ -204,9 +204,8 @@ void render(bl::DrawContext& context, int mouseX, int mouseY, float delta) {
 int main() {
 	bl::LightEngine engine;
 	engine.initialize();
-	bl::PathUtil::setResourceDir("../examples/pong");
 
-	engine.getDrawContext()->loadFont(bl::PathUtil::resolveResource("segoe.ttf"));
+	engine.getDrawContext()->loadFont(bl::PathUtil::resolveResource("fonts/segoe.ttf"));
 	bl::Window& window = engine.getWindow();
 	init(window);
 

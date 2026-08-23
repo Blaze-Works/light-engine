@@ -4,9 +4,9 @@
 
 namespace blaze::lightEngine {
 
-bool Keyboard::keys[GLFW_KEY_LAST] = {};
-bool Keyboard::keysPrev[GLFW_KEY_LAST] = {};
-bool Keyboard::keysPending[GLFW_KEY_LAST] = {};
+bool Keyboard::keys[GLFW_KEY_LAST + 1] = {};
+bool Keyboard::keysPrev[GLFW_KEY_LAST + 1] = {};
+bool Keyboard::keysPending[GLFW_KEY_LAST + 1] = {};
 
 void Keyboard::update(GLFWwindow* window) {
 	for (int i = 32; i <= GLFW_KEY_LAST; ++i) {

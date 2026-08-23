@@ -1,6 +1,7 @@
 #pragma once
 #define GLM_ENABLE_EXPERIMENTAL
 
+#include <object/Frustum.hpp>
 #include <object/Layers.hpp>
 
 #include <glm/glm.hpp>
@@ -36,6 +37,7 @@ public:
 	glm::vec3 position{0.0f};
 	glm::quat quaternion{1.0f, 0.0f, 0.0f, 0.0f}; // w, x, y, z
 	glm::vec3 scale{1.0f};
+	glm::vec3 zoom{1.0f};
 
 	glm::mat4 matrix{1.0f};
 	glm::mat4 matrixWorld{1.0f};
@@ -97,6 +99,12 @@ public:
 	void updateMatrixWorld(bool force = false);
 	void updateWorldMatrix(bool updateParents, bool updateChildren);
 
+	void updateWorldBounds();
+
+    const BoundingBox& getWorldBoundsBox() const { return this->worldBoundingBox; }
+    const BoundingSphere& getWorldBoundsSphere() const { return this->worldBoundingSphere; }
+    bool hasWorldBounds() const { return this->worldBoundingBox.valid; }
+
 	glm::vec3 getEuler() const;
 	void setEuler(const glm::vec3& eulerRadians);
 
@@ -105,8 +113,14 @@ public:
 
 protected:
 	static int nextId;
-
 	bool isCameraType = false;
+
+	virtual BoundingBox computeLocalBoundingBox() const;
+
+    BoundingBox worldBoundingBox;
+    BoundingSphere worldBoundingSphere;
+    bool boundsNeedUpdate = true;
+	void markBoundsDirty();
 
 private:
 	bool sameAsSnapshot();

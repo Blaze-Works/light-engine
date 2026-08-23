@@ -1,6 +1,7 @@
 #include <LightEngine.hpp>
 #include <input/Keyboard.hpp>
 #include <texture/TextureUtil.hpp>
+#include <util/PathUtil.hpp>
 #include <iostream>
 
 namespace bl = blaze::lightEngine;
@@ -8,7 +9,7 @@ namespace bl = blaze::lightEngine;
 std::shared_ptr<bl::Texture> tex;
 
 void init() {
-	bl::Texture t = bl::TextureUtil::loadTexture("../examples/texture/test.png");
+	bl::Texture t = bl::TextureUtil::loadTexture(bl::PathUtil::resolveResource("textures/image.png"));
 	tex = std::make_shared<bl::Texture>(t);
 }
 

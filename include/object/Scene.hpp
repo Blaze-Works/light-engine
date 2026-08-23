@@ -30,6 +30,7 @@ public:
 	}
 
 	Object3D* adopt(std::unique_ptr<Object3D> object);
+	Object3D* own(std::unique_ptr<Object3D> object);
 	void destroy(Object3D* object);
 	void clearOwned();
 

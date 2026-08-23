@@ -10,6 +10,7 @@ class TextureUtil {
 public:
 	static int maxSupportedTextureSize();
 	static Texture loadTexture(const std::string& path);
+	static Texture loadFromMemory(const unsigned char* data, int size, bool flipY = true);
 	static GLuint generateTextureId();
 	static Texture createTexture(int width, int height, unsigned char* buffer);
 	static Texture createAlphaTexture(int width, int height, unsigned char* buffer);

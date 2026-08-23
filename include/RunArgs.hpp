@@ -14,9 +14,9 @@ struct DirectorySet {
 	std::string assetIndex;
 
 	DirectorySet(
-		std::string workingDirectory = "..",
-		std::string resourcesDirectory = "../resources/",
-		std::string absoluteResourcesDirectory = "../resources/"
+		std::string workingDirectory = ".",
+		std::string resourcesDirectory = "./resources/",
+		std::string absoluteResourcesDirectory = "./resources/"
 	);
 };
 

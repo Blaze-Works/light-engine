@@ -6,9 +6,9 @@ namespace blaze::lightEngine {
 
 class Keyboard {
 public:
-	static bool keys[GLFW_KEY_LAST];
-	static bool keysPrev[GLFW_KEY_LAST];
-	static bool keysPending[GLFW_KEY_LAST];
+	static bool keys[GLFW_KEY_LAST + 1];
+	static bool keysPrev[GLFW_KEY_LAST + 1];
+	static bool keysPending[GLFW_KEY_LAST + 1];
 
 	static void update(GLFWwindow* window);
 	static bool isPressed(int key);

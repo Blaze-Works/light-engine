@@ -202,7 +202,7 @@ void DrawContext::drawTextureRegion(Texture& texture, float x1, float y1, float 
 		x1, y1, s1, t2,
 		x1, y2, s1, t1,
 		x2, y2, s2, t1,
-		
+
 		x2, y2, s2, t1,
 		x2, y1, s2, t2,
 		x1, y1, s1, t2,
@@ -308,7 +308,7 @@ void DrawContext::drawTexture(Texture& texture, float x, float y, float width, f
 		x, y, u0, v1,
 		x, y + height, u0, v0,
 		x + width, y + height, u1, v0,
-		
+
 		x + width, y + height, u1, v0,
 		x + width, y, u1, v1,
 		x, y, u0, v1,
@@ -545,10 +545,6 @@ void DrawContext::setupShaderProgram() {
 	if (this->shader) {
 		this->shader->bind();
 		this->shader->setUniform("uProjection", proj);
-		int posLoc = this->shader->getAttributeLocation("aPos");
-		int colorLoc = this->shader->getUniformLocation("uColor");
-		int projLoc = this->shader->getUniformLocation("uProjection");
-		LOG_DEBUG(std::string("Shader POSITION - aPos=") + std::to_string(posLoc) + std::string(" uColor=") + std::to_string(colorLoc) + std::string(" uProjection=") + std::to_string(projLoc));
 		this->shader->unbind();
 	}
 
@@ -556,10 +552,6 @@ void DrawContext::setupShaderProgram() {
 		this->textureShader->bind();
 		this->textureShader->setUniform("uProjection", proj);
 		this->textureShader->setUniform("uTexture", 0);
-		int posLocT = this->textureShader->getAttributeLocation("aPos");
-		int uvLocT = this->textureShader->getAttributeLocation("aUv");
-		int texLoc = this->textureShader->getUniformLocation("uTexture");
-		LOG_DEBUG(std::string("Shader POSITION_TEX - aPos=") + std::to_string(posLocT) + std::string(" aUv=") + std::to_string(uvLocT) + std::string(" uTexture=") + std::to_string(texLoc));
 		this->textureShader->unbind();
 	}
 

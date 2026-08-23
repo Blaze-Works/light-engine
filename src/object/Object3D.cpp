@@ -1,3 +1,4 @@
+#include "object/Frustum.hpp"
 #include <object/Object3D.hpp>
 #include <util/math/MathUtils.hpp>
 
@@ -296,6 +297,70 @@ glm::vec3 Object3D::getEuler() const {
 void Object3D::setEuler(const glm::vec3& eulerRadians) {
 	quaternion = glm::quat(eulerRadians);
 	matrixWorldNeedsUpdate = true;
+}
+
+void Object3D::markBoundsDirty() {
+	this->boundsNeedUpdate = true;
+	if (this->parent) this->parent->markBoundsDirty();
+}
+
+BoundingBox Object3D::computeLocalBoundingBox() const {
+	return {};
+}
+
+void Object3D::updateWorldBounds() {
+	for (Object3D* child : children) child->updateWorldBounds();
+
+	BoundingBox local = this->computeLocalBoundingBox();
+	BoundingBox world;
+
+	if (local.valid) {
+		glm::vec3 mn = local.min;
+		glm::vec3 mx = local.max;
+
+		glm::vec3 corners[8] = {
+            {mn.x, mn.y, mn.z}, {mx.x, mn.y, mn.z},
+            {mn.x, mx.y, mn.z}, {mx.x, mx.y, mn.z},
+            {mn.x, mn.y, mx.z}, {mx.x, mn.y, mx.z},
+            {mn.x, mx.y, mx.z}, {mx.x, mx.y, mx.z},
+        };
+
+		glm::vec3 wmin(std::numeric_limits<float>::max());
+        glm::vec3 wmax(std::numeric_limits<float>::lowest());
+        for (const glm::vec3& c : corners) {
+            glm::vec3 w = glm::vec3(matrixWorld * glm::vec4(c, 1.0f));
+            wmin = glm::min(wmin, w);
+            wmax = glm::max(wmax, w);
+        }
+
+		world.min = wmin;
+        world.max = wmax;
+        world.valid = true;
+	}
+
+	for (Object3D* child : children) {
+		if (!child->visible) continue;
+
+		const BoundingBox cb = child->worldBoundingBox;
+		if (!cb.valid) continue;
+		if (!world.valid) world = cb;
+		else {
+			world.min = glm::min(world.min, cb.min);
+			world.min = glm::max(world.max, cb.max);
+		}
+	}
+
+	this->worldBoundingBox = world;
+
+	if (world.valid) {
+        this->worldBoundingSphere.center = (world.min + world.max) * 0.5f;
+        this->worldBoundingSphere.radius = glm::length(world.max - world.min) * 0.5f;
+        this->worldBoundingSphere.valid  = true;
+    } else {
+        this->worldBoundingSphere = {};
+    }
+
+	this->boundsNeedUpdate = false;
 }
 
 bool Object3D::sameAsSnapshot() {

@@ -1,4 +1,4 @@
-	#include <LightEngine.hpp>
+#include <LightEngine.hpp>
 #include <input/Keyboard.hpp>
 #include <memory>
 #include <object/camera/PerspectiveCamera.hpp>
@@ -37,6 +37,11 @@ void init(bl::Window& window) {
 
 	window.onKeyUp([](int key) {
 		if (key == bl::Keyboard::Esc && g_engine) g_engine->scheduleStop();
+	});
+
+	window.onResize([&window](int w, int h) {
+		float aspect = window.getAspectRatio();
+		camera.setAspect(aspect);
 	});
 }
 

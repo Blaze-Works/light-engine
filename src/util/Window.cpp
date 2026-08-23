@@ -34,8 +34,8 @@ Window::Window(WindowEventHandler* eventHandler, WindowSettings settings, const 
 	this->minimized = false;
 	this->cursorEntered = false;
 
-	throwOnGlError();
-	setPhase("Pre startup");
+	this->throwOnGlError();
+	this->setPhase("Pre startup");
 
 	LOG_INFO(std::string(settings.describe()));
 
@@ -316,8 +316,8 @@ int Window::calculateScaleFactor(int guiScale, bool forceUnicodeFont) {
 		i < this->framebufferHeight && this->framebufferWidth / (i * 1) >= 320 &&
 		this->framebufferHeight / (i + 1) >= 240; ++i) {}
 
-	if (forceUnicodeFont && i % 2 != 0) ++i;
-	return i;
+		if (forceUnicodeFont && i % 2 != 0) ++i;
+		return i;
 }
 
 void Window::onFramebufferSizeChanged(GLFWwindow* window, int width, int height) {
@@ -374,8 +374,6 @@ void Window::onCursorPosChanged(GLFWwindow* window, double mouseX, double mouseY
 		if (self->eventHandler) {
 			self->eventHandler->onCursorPosChanged();
 		}
-
-		for (WindowMouseMovefun l : self->mouseMoveListeners) l(mouseX, mouseY);
 	}
 }
 
@@ -393,7 +391,7 @@ void Window::onMouseButtonListeners(GLFWwindow* window, int button, int action, 
 		double xpos[1];
 		double ypos[1];
 		glfwGetCursorPos(window, xpos, ypos);
-
+		
 		if (action == GLFW_PRESS) {
 			for (WindowMouseDownfun l : self->mouseDownListeners) l(button, xpos[0], ypos[0]);
 		} else if (action == GLFW_RELEASE) {
@@ -426,6 +424,8 @@ void Window::onMouseMoveListeners(GLFWwindow* window, double xpos, double ypos) 
 		if (self->eventHandler) {
 			self->eventHandler->onCursorPosChanged();
 		}
+		
+		for (WindowMouseMovefun l : self->mouseMoveListeners) l(xpos, ypos);
 	}
 }
 
@@ -475,10 +475,11 @@ void Window::onResize(WindowResizefun listener) {
 }
 
 void Window::offKeyDown(WindowKeyDownfun listener) {
-	auto it = std::find_if(this->keyDownListeners.begin(), this->keyDownListeners.end(), [listener](const std::function<void(int)>& fn) {
-		// auto* const* target_ptr = fn.target<WindowKeyDownfun>();
-		// return target_ptr && (*target_ptr == listener);
-		return fn.target<WindowKeyDownfun>() == listener.target<WindowKeyDownfun>();
+	auto it = std::find_if(this->keyDownListeners.begin(), this->keyDownListeners.end(), [&listener](const WindowKeyDownfun& fn) {
+		using RawFnPtr = void(*)(int);
+		auto* lhs = fn.target<RawFnPtr>();
+		auto* rhs = listener.target<RawFnPtr>();
+		return lhs && rhs && (*lhs == *rhs);
 	});
 
 	if (it != this->keyDownListeners.end()) {
@@ -487,10 +488,11 @@ void Window::offKeyDown(WindowKeyDownfun listener) {
 }
 
 void Window::offKeyUp(WindowKeyUpfun listener) {
-	auto it = std::find_if(this->keyUpListeners.begin(), this->keyUpListeners.end(), [listener](const std::function<void(int)>& fn) {
-		// auto* const* target_ptr = fn.target<WindowKeyUpfun>();
-		// return target_ptr && (*target_ptr == listener);
-		return fn.target<WindowKeyUpfun>() == listener.target<WindowKeyUpfun>();
+	auto it = std::find_if(this->keyUpListeners.begin(), this->keyUpListeners.end(), [&listener](const WindowKeyUpfun& fn) {
+		using RawFnPtr = void(*)(int);
+		auto* lhs = fn.target<RawFnPtr>();
+		auto* rhs = listener.target<RawFnPtr>();
+		return lhs && rhs && (*lhs == *rhs);
 	});
 
 	if (it != this->keyUpListeners.end()) {
@@ -499,10 +501,11 @@ void Window::offKeyUp(WindowKeyUpfun listener) {
 }
 
 void Window::offMouseDown(WindowMouseDownfun listener) {
-	auto it = std::find_if(this->mouseDownListeners.begin(), this->mouseDownListeners.end(), [listener](const std::function<void(int, double, double)>& fn) {
-		// auto* const* target_ptr = fn.target<WindowMouseDownfun>();
-		// return target_ptr && (*target_ptr == listener);
-		return fn.target<WindowMouseDownfun>() == listener.target<WindowMouseDownfun>();
+	auto it = std::find_if(this->mouseDownListeners.begin(), this->mouseDownListeners.end(), [&listener](const WindowMouseDownfun& fn) {
+		using RawFnPtr = void(*)(int, double, double);
+		auto* lhs = fn.target<RawFnPtr>();
+		auto* rhs = listener.target<RawFnPtr>();
+		return lhs && rhs && (*lhs == *rhs);
 	});
 
 	if (it != this->mouseDownListeners.end()) {
@@ -511,10 +514,11 @@ void Window::offMouseDown(WindowMouseDownfun listener) {
 }
 
 void Window::offMouseMove(WindowMouseMovefun listener) {
-	auto it = std::find_if(this->mouseMoveListeners.begin(), this->mouseMoveListeners.end(), [listener](const std::function<void(double, double)>& fn) {
-		// auto* const* target_ptr = fn.target<WindowMouseMovefun>();
-		// return target_ptr && (*target_ptr == listener);
-		return fn.target<WindowMouseMovefun>() == listener.target<WindowMouseMovefun>();
+	auto it = std::find_if(this->mouseMoveListeners.begin(), this->mouseMoveListeners.end(), [&listener](const WindowMouseMovefun& fn) {
+		using RawFnPtr = void(*)(double, double);
+		auto* lhs = fn.target<RawFnPtr>();
+		auto* rhs = listener.target<RawFnPtr>();
+		return lhs && rhs && (*lhs == *rhs);
 	});
 
 	if (it != this->mouseMoveListeners.end()) {
@@ -523,10 +527,11 @@ void Window::offMouseMove(WindowMouseMovefun listener) {
 }
 
 void Window::offMouseUp(WindowMouseUpfun listener) {
-	auto it = std::find_if(this->mouseUpListeners.begin(), this->mouseUpListeners.end(), [listener](const std::function<void(int, double, double)>& fn) {
-		//mauto* const* target_ptr = fn.target<WindowMouseUpfun>();
-		// return target_ptr && (*target_ptr == listener);
-		return fn.target<WindowMouseUpfun>() == listener.target<WindowMouseUpfun>();
+	auto it = std::find_if(this->mouseUpListeners.begin(), this->mouseUpListeners.end(), [&listener](const WindowMouseUpfun& fn) {
+		using RawFnPtr = void(*)(int, double, double);
+		auto* lhs = fn.target<RawFnPtr>();
+		auto* rhs = listener.target<RawFnPtr>();
+		return lhs && rhs && (*lhs == *rhs);
 	});
 
 	if (it != this->mouseUpListeners.end()) {
@@ -535,10 +540,11 @@ void Window::offMouseUp(WindowMouseUpfun listener) {
 }
 
 void Window::offMouseScroll(WindowMouseScrollfun listener) {
-	auto it = std::find_if(this->mouseScrollListeners.begin(), this->mouseScrollListeners.end(),[listener](const std::function<void(double, double)>& fn) {
-		// auto* const* target_ptr = fn.target<WindowMouseScrollfun>();
-		// return target_ptr && (*target_ptr == listener);
-		return fn.target<WindowMouseScrollfun>() == listener.target<WindowMouseScrollfun>();
+	auto it = std::find_if(this->mouseScrollListeners.begin(), this->mouseScrollListeners.end(), [&listener](const WindowMouseScrollfun& fn) {
+		using RawFnPtr = void(*)(double, double);
+		auto* lhs = fn.target<RawFnPtr>();
+		auto* rhs = listener.target<RawFnPtr>();
+		return lhs && rhs && (*lhs == *rhs);
 	});
 
 	if (it != this->mouseScrollListeners.end()) {
@@ -547,8 +553,11 @@ void Window::offMouseScroll(WindowMouseScrollfun listener) {
 }
 
 void Window::offResize(WindowResizefun listener) {
-	auto it = std::find_if(this->resizeListeners.begin(), this->resizeListeners.end(), [listener](const WindowResizefun& fn) {
-		return listener.target<WindowResizefun>() == fn.target<WindowResizefun>();
+	auto it = std::find_if(this->resizeListeners.begin(), this->resizeListeners.end(), [&listener](const WindowResizefun& fn) {
+		using RawFnPtr = void(*)(double, double);
+		auto* lhs = fn.target<RawFnPtr>();
+		auto* rhs = listener.target<RawFnPtr>();
+		return lhs && rhs && (*lhs == *rhs);
 	});
 
 	if (it != this->resizeListeners.end()) {

@@ -1,7 +1,6 @@
+#include <render/Renderer3D.hpp>
 #include <color/Argb.hpp>
 #include <gl/ShaderPrograms.hpp>
-#include <gl/glad.h>
-#include <render/Renderer3D.hpp>
 
 #include <glm/gtc/matrix_inverse.hpp>
 
@@ -11,7 +10,7 @@ namespace blaze::lightEngine {
 
 void Renderer3D::init() {
 	if (this->shader) return;
-	this->setShader(ShaderPrograms::PROJECTION_INDICES);
+	this->setShader(ShaderPrograms::MESH);
 }
 
 void Renderer3D::setShader(std::shared_ptr<ShaderProgram> shader) {
@@ -36,11 +35,54 @@ void Renderer3D::clear(Scene* scene) {
 	glClear(bits);
 }
 
+bool Renderer3D::cullObject(Object3D* object, Camera& camera, std::vector<RenderItem>& list) {
+	auto* mesh = dynamic_cast<Mesh*>(object);
+	BoundingSphere sphere = mesh->getWorldBoundingSphere();
+	if (!sphere.valid) {
+		BoundingBox box = mesh->getWorldBoundingBox();
+		if (!box.valid || this->frustum.intersectsBox(box.min, box.max)) return false;
+
+		this->stats.frustumCulled++;
+		for (Object3D* child : object->children) this->projectObject(child, camera, list);
+		return true;
+	}
+
+	if (this->frustum.intersectsSphere(sphere.center, sphere.radius)) return false;
+
+	this->stats.frustumCulled++;
+	for (Object3D* child : object->children) this->projectObject(child, camera, list);
+	return true;
+}
+
 void Renderer3D::projectObject(Object3D* object, Camera& camera, std::vector<RenderItem>& list) {
 	if (!object || !object->visible) return;
 
+	if (settings.frustumCulling && settings.hierarchicalCulling && object->frustumCulled && object->hasWorldBounds()) {
+        const BoundingSphere& sphere = object->getWorldBoundsSphere();
+        bool outside = false;
+
+        if (sphere.valid) outside = !this->frustum.intersectsSphere(sphere.center, sphere.radius);
+        else {
+            const BoundingBox& box = object->getWorldBoundsBox();
+            if (box.valid) outside = !this->frustum.intersectsBox(box.min, box.max);
+        }
+
+        if (outside) {
+            this->stats.hierarchicalCulled++;
+			
+            object->traverseVisible([&](Object3D* n) {
+                if (dynamic_cast<Mesh*>(n)) this->stats.frustumCulled++;
+            });
+            return;
+        }
+    }
+
 	if (auto* mesh = dynamic_cast<Mesh*>(object)) {
 		if (mesh->isUploaded() && mesh->geometry) {
+			this->stats.totalCandidates++;
+
+			if (!this->settings.hierarchicalCulling && this->cullObject(object, camera, list)) return;
+
 			RenderItem item;
 			item.mesh = mesh;
 			glm::vec4 viewPos = camera.matrixWorldInverse * glm::vec4(mesh->getWorldPosition(), 1.0f);
@@ -57,9 +99,20 @@ void Renderer3D::projectObject(Object3D* object, Camera& camera, std::vector<Ren
 void Renderer3D::renderObject(Mesh& mesh, Camera& camera) {
 	if (!this->shader) return;
 
-	const glm::mat4& model = mesh.matrixWorld;
-	glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(model)));
-
+	glm::mat4 model = mesh.isSkinned() ? glm::mat4(1.0f) : mesh.matrixWorld;
+	glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(mesh.isSkinned() ? mesh.matrixWorld : model)));
+	
+	if (mesh.isSkinned() && mesh.skin) {
+		mesh.skin->update();
+		const int count = static_cast<int>(std::min(mesh.skin->boneMatrices.size(), size_t(64)));
+		
+		this->shader->setUniform("uUseSkinning", 1);
+		if (count > 0) this->shader->setUniform("uBoneMatrices", mesh.skin->boneMatrices.data(), count);
+		
+		model = glm::mat4(1.0f);
+		normalMat = glm::mat3(1.0f);
+	} else this->shader->setUniform("uUseSkinning", 0);
+	
 	this->shader->setUniform("uModel", model);
 	this->shader->setUniform("uNormalMatrix", normalMat);
 
@@ -96,8 +149,10 @@ void Renderer3D::renderObject(Mesh& mesh, Camera& camera) {
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 	} else {
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);
 	}
 
 	this->shader->setUniform("uColor", color);
@@ -106,8 +161,6 @@ void Renderer3D::renderObject(Mesh& mesh, Camera& camera) {
 	if (hasTexture) {
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texId);
-		this->shader->setUniform("uTexture", 0);
-	} else {
 		this->shader->setUniform("uTexture", 0);
 	}
 
@@ -122,17 +175,25 @@ void Renderer3D::renderObject(Mesh& mesh, Camera& camera) {
 	if (hasTexture) {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
+
+	this->stats.drawn++;
 }
 
 void Renderer3D::render(Scene& scene, Camera& camera) {
 	if (!this->shader) this->init();
 	if (!this->shader) return;
 
+	this->stats = {};
+
 	if (scene.autoUpdate) scene.updateMatrixWorld(true);
 	camera.updateMatrixWorld();
 
+	if (this->settings.frustumCulling && this->settings.hierarchicalCulling) scene.updateWorldBounds();
+	if (this->settings.frustumCulling) this->frustum.setFromMatrix(camera.getViewProjectionMatrix());
 	if (this->settings.autoClear) this->clear(&scene);
 
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
@@ -161,7 +222,11 @@ void Renderer3D::render(Scene& scene, Camera& camera) {
 
 	this->shader->unbind();
 	glBindVertexArray(0);
-	glDisable(GL_CULL_FACE);
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 } // namespace blaze::lightEngine

@@ -14,7 +14,7 @@ public:
 	GLuint blitVbo;
 
 	Framebuffer(int w, int h, bool usedepth);
-	~Framebuffer();
+	~Framebuffer() = default;
 
 	void initFbo(int width, int height);
 	void beginWrite(bool setViewport);

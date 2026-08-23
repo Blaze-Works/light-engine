@@ -49,18 +49,17 @@ Texture TextureUtil::loadTexture(const std::string& path) {
 	}
 
 	file.close();
+	return TextureUtil::loadFromMemory(reinterpret_cast<const unsigned char*>(buffer.data()), static_cast<int>(buffer.size()));
+}
 
-	stbi_set_flip_vertically_on_load(true);
+Texture TextureUtil::loadFromMemory(const unsigned char* data, int size, bool flipY) {
+	stbi_set_flip_vertically_on_load(flipY);
 
 	int w = 0;
 	int h = 0;
 	int channels = 0;
 
-	unsigned char* image = stbi_load_from_memory(
-		reinterpret_cast<const unsigned char*>(buffer.data()),
-		static_cast<int>(buffer.size()),
-		&w, &h, &channels, 4
-	);
+	unsigned char* image = stbi_load_from_memory(data, size, &w, &h, &channels, 4);
 
 	if (image == nullptr) {
 		throw std::runtime_error("Failed to load image: " + std::string(stbi_failure_reason()));
@@ -71,6 +70,7 @@ Texture TextureUtil::loadTexture(const std::string& path) {
 
 	return texture;
 }
+
 
 GLuint TextureUtil::generateTextureId() {
 	GLuint tex;
