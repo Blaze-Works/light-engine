@@ -1,4 +1,3 @@
-#include <color/Argb.hpp>
 #include <gl/glad.h>
 #include <gl/ShaderPrograms.hpp>
 #include <render/DrawContext.hpp>
@@ -54,10 +53,6 @@ Window* DrawContext::getWindow() {
 	return this->window;
 }
 
-void DrawContext::stroke(int argb) {
-	this->stroke(Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
-}
-
 void DrawContext::stroke(int r, int g, int b, int a) {
 	this->shader->bind();
 	this->shader->setUniform("uColor", (float) r / 255, (float) g / 255, (float) b / 255, (float) a / 255);
@@ -72,10 +67,6 @@ void DrawContext::stroke(int r, int g, int b, int a) {
 
 	this->endPath();
 	this->shader->unbind();
-}
-
-void DrawContext::fill(int argb) {
-	this->fill(Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
 }
 
 void DrawContext::fill(int r, int g, int b, int a) {
@@ -124,21 +115,11 @@ void DrawContext::setTransparent(bool transparent) {
 }
 
 void DrawContext::loadFont(const std::string& path, int size, bool antiAlias) {
-	try {
-		this->setTextRenderer(std::make_unique<TextRenderer>(path, size, antiAlias));
-	} catch (std::exception ex) {
-		LOG_ERROR(std::string("Failed to load font: ") + ex.what());
-		throw ex;
-	}
+	this->setTextRenderer(std::make_unique<TextRenderer>(path, size, antiAlias));
 }
 
 void DrawContext::loadDebugFont(const std::string& path, int size, bool antiAlias) {
-	try {
-		this->setDebugTextRenderer(std::make_unique<TextRenderer>(path, size, antiAlias));
-	} catch (std::exception ex) {
-		LOG_ERROR(std::string("Failed to load font: ") + ex.what());
-		throw ex;
-	}
+	this->setDebugTextRenderer(std::make_unique<TextRenderer>(path, size, antiAlias));
 }
 
 void DrawContext::setTextRenderer(std::shared_ptr<TextRenderer> textRenderer) {
@@ -149,24 +130,12 @@ void DrawContext::setDebugTextRenderer(std::shared_ptr<TextRenderer> debugTextRe
 	this->debugTextRenderer = std::move(debugTextRenderer);
 }
 
-void DrawContext::drawHorizontalLine(float x1, float x2, float y, int argb) {
-	this->drawHorizontalLine(x1, x2, y, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
-}
-
 void DrawContext::drawHorizontalLine(float x1, float x2, float y, int r, int g, int b, int a) {
 	this->drawLine(x1, x2, y, y, r, g, b, a);
 }
 
-void DrawContext::drawVerticalLine(float x, float y1, float y2, int argb) {
-	this->drawVerticalLine(x, y1, y2, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
-}
-
 void DrawContext::drawVerticalLine(float x, float y1, float y2, int r, int g, int b, int a) {
 	this->drawLine(x, x, y1, y2, r, g, b, a);
-}
-
-void DrawContext::drawLine(float x1, float x2, float y1, float y2, int argb) {
-	this->drawLine(x1, x2, y1, y2, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
 }
 
 void DrawContext::drawLine(float x1, float x2, float y1, float y2, int r, int g, int b, int a) {
@@ -174,10 +143,6 @@ void DrawContext::drawLine(float x1, float x2, float y1, float y2, int r, int g,
 	this->moveTo(x1, y1);
 	this->lineTo(x2, y2);
 	this->stroke(r, g, b, a);
-}
-
-void DrawContext::drawTextureRegion(Texture& texture, float x, float y, int regX, int regY, int regWidth, int regHeight, int argb, bool flipped) {
-	this->drawTextureRegion(texture, x, y, regX, regY, regWidth, regHeight, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb), flipped);
 }
 
 void DrawContext::drawTextureRegion(Texture& texture, float x, float y, int regX, int regY, int regWidth, int regHeight, int r, int g, int b, int a, bool flipped) {
@@ -191,10 +156,6 @@ void DrawContext::drawTextureRegion(Texture& texture, float x, float y, int regX
 
 	if (flipped) this->drawTextureRegion(texture, x, y, x2, y2, s1, t1, s2, t2, r, g, b, a);
 	else this->drawTextureRegion(texture, x, y, x2, y2, s1, (1.0f - t2), s2, (1.0f - t1), r, g, b, a);
-}
-
-void DrawContext::drawTextureRegion(Texture& texture ,float x1, float y1, float x2, float y2, float s1, float t1, float s2, float t2, int argb) {
-	this->drawTextureRegion(texture, x1, y1, x2, y2, s1, t1, s2, t2, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
 }
 
 void DrawContext::drawTextureRegion(Texture& texture, float x1, float y1, float x2, float y2, float s1, float t1, float s2, float t2, int r, int g, int b, int a) {
@@ -217,10 +178,6 @@ void DrawContext::drawTextureBatch(Texture& texture, const std::vector<float>& v
 
 void DrawContext::drawTextureBatch(Texture& texture, const std::vector<float>& vertices, int r, int g, int b, int a) {
 	this->drawTextureBatch(texture, vertices.data(), vertices.size(), r, g, b, a);
-}
-
-void DrawContext::drawTextureBatch(Texture& texture, const float* vertices, size_t count, int argb) {
-	this->drawTextureBatch(texture, vertices, count, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
 }
 
 void DrawContext::drawTextureBatch(Texture& texture, const float* vertices, size_t count, int r, int g, int b, int a) {
@@ -283,24 +240,8 @@ void DrawContext::flushTextureBatch() {
 	this->textureBatchTextureId = 0;
 }
 
-void DrawContext::drawTexture(Texture& texture, float x, float y, int argb) {
-	this->drawTexture(texture, x, y, 0, 0, 1, 1, argb);
-}
-
-void DrawContext::drawTexture(Texture& texture, float x, float y, float width, float height, int argb) {
-	this->drawTexture(texture, x, y, width, height, 0, 0, 1, 1, argb);
-}
-
-void DrawContext::drawTexture(Texture& texture, float x, float y, float u0, float v0, float u1, float v1, int argb) {
-	this->drawTexture(texture, x, y, texture.getWidth(), texture.getHeight(), u0, v0, u1, v1, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
-}
-
 void DrawContext::drawTexture(Texture& texture, float x, float y, float u0, float v0, float u1, float v1, int r, int g, int b, int a) {
 	this->drawTexture(texture, x, y, texture.getWidth(), texture.getHeight(), u0, v0, u1, v1, r, g, b, a);
-}
-
-void DrawContext::drawTexture(Texture& texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, int argb) {
-	this->drawTexture(texture, x, y, width, height, u0, v0, u1, v1, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
 }
 
 void DrawContext::drawTexture(Texture& texture, float x, float y, float width, float height, float u0, float v0, float u1, float v1, int r, int g, int b, int a) {
@@ -315,14 +256,6 @@ void DrawContext::drawTexture(Texture& texture, float x, float y, float width, f
 	};
 
 	this->drawTextureBatch(texture, buffer, 24, r, g, b, a);
-}
-
-void DrawContext::drawQuadWithBorder(float x, float y, float width, float height, int argb, float spacing, float stroke, int argbStroke) {
-	this->drawQuadWithBorder(x, y, width, height, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb), spacing, stroke, Argb::getRed(argbStroke), Argb::getGreen(argbStroke), Argb::getBlue(argbStroke), Argb::getAlpha(argbStroke));
-}
-
-void DrawContext::drawQuad(float x, float y, float width, float height, int argb) {
-	this->drawQuad(x, y, width, height, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
 }
 
 void DrawContext::drawQuadWithBorder(float x, float y, float width, float height, int r, int g, int b, int a, float spacing, float stroke, int rStroke, int gStroke, int bStroke, int aStroke) {
@@ -340,10 +273,6 @@ void DrawContext::drawQuad(float x, float y, float width, float height, int r, i
 	this->fill(r, g, b, a);
 }
 
-void DrawContext::drawBorder(float x, float y, float width, float height, int argb, float spacing, float stroke) {
-	this->drawBorder(x, y, width, height, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb), spacing, stroke);
-}
-
 void DrawContext::drawBorder(float x, float y, float width, float height, int r, int g, int b, int a, float spacing, float stroke) {
 	float hStroke = stroke / 2;
 	float x1 = x - spacing - hStroke;
@@ -356,14 +285,6 @@ void DrawContext::drawBorder(float x, float y, float width, float height, int r,
 	this->drawHorizontalLine(x1, x2, y2, r, g, b, a);
 	this->drawVerticalLine(x1, y1, y2, r, g, b, a);
 	this->drawVerticalLine(x2, y1, y2, r, g, b, a);
-}
-
-void DrawContext::drawCircleWithBorder(float cx, float cy, float radius, int segments, int argb, bool fill, float spacing, float stroke, int argbStroke) {
-	this->drawCircleWithBorder(cx, cy, radius, segments, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb), fill, spacing, stroke, Argb::getRed(argbStroke), Argb::getGreen(argbStroke), Argb::getBlue(argbStroke), Argb::getAlpha(argbStroke));
-}
-
-void DrawContext::drawCircle(float cx, float cy, float radius, int segments, int argb, bool fill) {
-	this->drawCircle(cx, cy, radius, segments, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb), fill);
 }
 
 void DrawContext::drawCircleWithBorder(float cx, float cy, float radius, int segments, int r, int g, int b, int a, bool fill, float spacing, float stroke, int rStroke, int gStroke, int bStroke, int aStroke) {
@@ -404,44 +325,21 @@ void DrawContext::drawCircle(float cx, float cy, float radius, int segments, int
 	this->shader->unbind();
 }
 
-void DrawContext::drawText(float x, float y, std::string text, int r, int g, int b, int a) {
+void DrawContext::drawText(float x, float y, const std::string& text, int r, int g, int b, int a) {
 	if (text.empty()) return;
 	this->textRenderer->drawText(this, text, x, y, r, g, b, a);
 }
 
-void DrawContext::drawText(float x, float y, std::string text, int color) {
-	this->drawText(x, y, text, Argb::getRed(color), Argb::getGreen(color), Argb::getBlue(color), Argb::getAlpha(color));
-}
-
-void DrawContext::drawText(float x, float y, std::string text) {
-	this->drawText(x, y, text, 0xFFFFFFFF);
-}
-
-void DrawContext::drawCenteredText(float x, float y, std::string text) {
-	this->drawCenteredText(x, y, text, 0xFFFFFFFF);
-}
-
-void DrawContext::drawCenteredText(float x, float y, std::string text, int argb) {
-	this->drawCenteredText(x, y, text, Argb::getRed(argb) , Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
-}
-
-void DrawContext::drawCenteredText(float x, float y, std::string text, int r, int g, int b, int a) {
+void DrawContext::drawCenteredText(float x, float y, const std::string& text, int r, int g, int b, int a) {
 	this->drawText(x - (float) this->textRenderer->getWidth(text) / 2, y, text, r, g, b, a);
 }
 
-void DrawContext::drawTextWithShadow(float x, float y, std::string text, int argb) {
-	this->drawTextWithShadow(x, y, text, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
-}
-
-void DrawContext::drawTextWithShadow(float x, float y, std::string text, int r, int g, int b, int a) {
+void DrawContext::drawTextWithShadow(float x, float y, const std::string& text, int r, int g, int b, int a) {
+	if (text.empty()) return;
 	this->textRenderer->drawText(this, text, x, y, r, g, b, a, true);
 }
 
-void DrawContext::drawCenteredTextWithShadow(float x, float y, std::string text, int argb) {
-	this->drawCenteredTextWithShadow(x, y, text, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
-}
-
-void DrawContext::drawCenteredTextWithShadow(float x, float y, std::string text, int r, int g, int b, int a) {
+void DrawContext::drawCenteredTextWithShadow(float x, float y, const std::string& text, int r, int g, int b, int a) {
 	if (text.empty()) return;
 	this->textRenderer->drawText(this, text, x - (float) this->textRenderer->getWidth(text) / 2, y, r, g, b, a, true);
 }
@@ -454,44 +352,21 @@ float DrawContext::getTextHeight(std::string text) {
 	return this->textRenderer->getHeight(text);
 }
 
-void DrawContext::drawDebugText(float x, float y, std::string text, int r, int g, int b, int a) {
+void DrawContext::drawDebugText(float x, float y, const std::string& text, int r, int g, int b, int a) {
 	if (text.empty()) return;
 	this->debugTextRenderer->drawText(this, text, x, y, r, g, b, a);
 }
 
-void DrawContext::drawDebugText(float x, float y, std::string text, int argb) {
-	this->drawDebugText(x, y, text, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
-}
-
-void DrawContext::drawDebugText(float x, float y, std::string text) {
-	this->drawDebugText(x, y, text, 0xFFFFFFFF);
-}
-
-void DrawContext::drawCenteredDebugText(float x, float y, std::string text) {
-	this->drawCenteredDebugText(x, y, text, 0xFFFFFFFF);
-}
-
-void DrawContext::drawCenteredDebugText(float x, float y, std::string text, int argb) {
-	this->drawCenteredDebugText(x, y, text, Argb::getRed(argb) , Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
-}
-
-void DrawContext::drawCenteredDebugText(float x, float y, std::string text, int r, int g, int b, int a) {
+void DrawContext::drawCenteredDebugText(float x, float y, const std::string& text, int r, int g, int b, int a) {
 	this->drawDebugText(x - (float) this->debugTextRenderer->getWidth(text) / 2, y, text, r, g, b, a);
 }
 
-void DrawContext::drawDebugTextWithShadow(float x, float y, std::string text, int argb) {
-	this->drawDebugTextWithShadow(x, y, text, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
-}
-
-void DrawContext::drawDebugTextWithShadow(float x, float y, std::string text, int r, int g, int b, int a) {
+void DrawContext::drawDebugTextWithShadow(float x, float y, const std::string& text, int r, int g, int b, int a) {
+	if (text.empty()) return;
 	this->debugTextRenderer->drawText(this, text, x, y, r, g, b, a, true);
 }
 
-void DrawContext::drawCenteredDebugTextWithShadow(float x, float y, std::string text, int argb) {
-	this->drawCenteredDebugTextWithShadow(x, y, text, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
-}
-
-void DrawContext::drawCenteredDebugTextWithShadow(float x, float y, std::string text, int r, int g, int b, int a) {
+void DrawContext::drawCenteredDebugTextWithShadow(float x, float y, const std::string& text, int r, int g, int b, int a) {
 	if (text.empty()) return;
 	this->debugTextRenderer->drawText(this, text, x - (float) this->debugTextRenderer->getWidth(text) / 2, y, r, g, b, a, true);
 }

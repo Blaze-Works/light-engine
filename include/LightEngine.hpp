@@ -26,7 +26,7 @@ public:
 	const std::string runDirectory;
 
 	void initialize();
-	void sync(int fps);
+	void sync(int targetRate, double& lastTime, Timer& timer);
 	bool getFullscreen();
 	void setFullscreen(bool fullscreen);
 	bool getEnableVsync();
@@ -74,9 +74,9 @@ public:
 	static LightEngine& getInstance() noexcept;
 
 private:
-	void update();
+	void update(float delta);
 	void render(float delta);
-	void runUpdateLoop();
+	void runUpdateLoop(Timer& timer);
 	void runSingleThread();
 	void runMultiThread();
 	void drawDebug(float delta);

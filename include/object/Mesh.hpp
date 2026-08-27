@@ -27,7 +27,10 @@ public:
 	void dispose();
 
 	bool isUploaded() const { return this->uploaded; }
-	bool isSkinned() const { return this->skin != nullptr && this->hasJoints; }
+	bool isSkinned() const { return this->skin != nullptr && this->hasJoints && this->hasWeights; }
+	bool hasJointAttrs() const { return this->hasJoints; }
+	bool hasWeightAttrss() const { return this->hasWeights; }
+
 
 	BoundingSphere getWorldBoundingSphere() const;
 	BoundingBox getWorldBoundingBox() const;

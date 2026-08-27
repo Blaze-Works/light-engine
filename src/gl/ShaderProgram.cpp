@@ -170,9 +170,14 @@ void ShaderProgram::setUniform(const std::string& name, const glm::mat4 value) {
 }
 
 void ShaderProgram::setUniform(const std::string& name, const glm::mat4* values, int count) {
+	if (!values || count <= 0) return;
 	GLuint location = this->getUniformLocation(name);
-	if (location < 0 || count <= 0) return;
-	glUniformMatrix4fv(location, count, GL_FALSE, glm::value_ptr(values[0]));
+	if (location >= 0) { glUniformMatrix4fv(location, count, GL_FALSE, glm::value_ptr(values[0])); return; }
+
+	for (int i = 0; i < count; i++) {
+		GLuint loc = this->getUniformLocation(name + "[" + std::to_string(i) + "]");
+		if (loc >= 0) glUniformMatrix4fv(location, count, GL_FALSE, glm::value_ptr(values[0]));
+	}
 }
 
 } // namespace blaze::lightEngine

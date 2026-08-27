@@ -1,0 +1,2 @@
+-Iinclude
+-I/data/data/com.termux/files/usr/include/freetype2

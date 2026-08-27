@@ -1,9 +1,7 @@
 #include <render/Renderer3D.hpp>
-#include <color/Argb.hpp>
 #include <gl/ShaderPrograms.hpp>
 
 #include <glm/gtc/matrix_inverse.hpp>
-
 #include <algorithm>
 
 namespace blaze::lightEngine {
@@ -58,24 +56,24 @@ void Renderer3D::projectObject(Object3D* object, Camera& camera, std::vector<Ren
 	if (!object || !object->visible) return;
 
 	if (settings.frustumCulling && settings.hierarchicalCulling && object->frustumCulled && object->hasWorldBounds()) {
-        const BoundingSphere& sphere = object->getWorldBoundsSphere();
-        bool outside = false;
+		const BoundingSphere& sphere = object->getWorldBoundsSphere();
+		bool outside = false;
 
-        if (sphere.valid) outside = !this->frustum.intersectsSphere(sphere.center, sphere.radius);
-        else {
-            const BoundingBox& box = object->getWorldBoundsBox();
-            if (box.valid) outside = !this->frustum.intersectsBox(box.min, box.max);
-        }
+		if (sphere.valid) outside = !this->frustum.intersectsSphere(sphere.center, sphere.radius);
+		else {
+			const BoundingBox& box = object->getWorldBoundsBox();
+			if (box.valid) outside = !this->frustum.intersectsBox(box.min, box.max);
+		}
 
-        if (outside) {
-            this->stats.hierarchicalCulled++;
-			
-            object->traverseVisible([&](Object3D* n) {
-                if (dynamic_cast<Mesh*>(n)) this->stats.frustumCulled++;
-            });
-            return;
-        }
-    }
+		if (outside) {
+			this->stats.hierarchicalCulled++;
+
+			object->traverseVisible([&](Object3D* n) {
+				if (dynamic_cast<Mesh*>(n)) this->stats.frustumCulled++;
+			});
+			return;
+		}
+	}
 
 	if (auto* mesh = dynamic_cast<Mesh*>(object)) {
 		if (mesh->isUploaded() && mesh->geometry) {
@@ -99,20 +97,15 @@ void Renderer3D::projectObject(Object3D* object, Camera& camera, std::vector<Ren
 void Renderer3D::renderObject(Mesh& mesh, Camera& camera) {
 	if (!this->shader) return;
 
-	glm::mat4 model = mesh.isSkinned() ? glm::mat4(1.0f) : mesh.matrixWorld;
-	glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(mesh.isSkinned() ? mesh.matrixWorld : model)));
-	
+	glm::mat4 model = mesh.matrixWorld;
+	glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(model)));
+
 	if (mesh.isSkinned() && mesh.skin) {
-		mesh.skin->update();
-		const int count = static_cast<int>(std::min(mesh.skin->boneMatrices.size(), size_t(64)));
-		
+		mesh.skin->update(mesh.matrixWorld);
 		this->shader->setUniform("uUseSkinning", 1);
-		if (count > 0) this->shader->setUniform("uBoneMatrices", mesh.skin->boneMatrices.data(), count);
-		
-		model = glm::mat4(1.0f);
-		normalMat = glm::mat3(1.0f);
-	} else this->shader->setUniform("uUseSkinning", 0);
-	
+		this->shader->setUniform("uBoneMatrices", mesh.skin->boneMatrices.data(), Skin::kMaxBones);
+	} else  this->shader->setUniform("uUseSkinning", 0);
+
 	this->shader->setUniform("uModel", model);
 	this->shader->setUniform("uNormalMatrix", normalMat);
 
@@ -221,6 +214,7 @@ void Renderer3D::render(Scene& scene, Camera& camera) {
 	}
 
 	this->shader->unbind();
+	
 	glBindVertexArray(0);
 	glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);

@@ -70,6 +70,7 @@ if(INCLUDE_EXAMPLES)
 	add_example(texture "")
 	add_example(3dmodel "")
 	add_example(camera-control "")
+	add_example(animation "")
 
 	# Threading support specifically for multithreaded target
 	find_package(Threads REQUIRED)

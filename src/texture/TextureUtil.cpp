@@ -1,6 +1,5 @@
 #define STB_IMAGE_IMPLEMENTATION
 
-#include <color/Argb.hpp>
 #include <texture/stb_image.h>
 #include <texture/TextureUtil.hpp>
 #include <util/Logger.hpp>
@@ -113,14 +112,6 @@ Texture TextureUtil::createAlphaTexture(int width, int height, unsigned char* bu
 	texture.uploadData(GL_RED, width, height, GL_RED, buffer);
 
 	return texture;
-}
-
-Texture TextureUtil::coloredTexture(int argb) {
-	return TextureUtil::coloredTexture(Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb), 1, 1);
-}
-
-Texture TextureUtil::coloredTexture(int argb, int width, int height) {
-	return coloredTexture(Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb), width, height);
 }
 
 Texture TextureUtil::coloredTexture(int r, int g, int b, int a) {

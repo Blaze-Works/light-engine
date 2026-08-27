@@ -1,4 +1,3 @@
-#include <color/Argb.hpp>
 #include <render/DrawContext.hpp>
 #include <text/TextRenderer.hpp>
 #include <texture/Texture.hpp>
@@ -16,13 +15,15 @@ namespace blaze::lightEngine {
 TextRenderer::TextRenderer(const std::string& fontPath, int size, bool antiAlias = true) {
 	FT_Library library;
 	if (FT_Init_FreeType(&library)) {
-		throw std::runtime_error("Failed to initialize FreeType Library");
+		LOG_ERROR("Failed to initialize FreeType Library");
+		exit(-1);
 	}
 
 	FT_Face face;
 	if (FT_New_Face(library, fontPath.c_str(), 0, &face)) {
 		FT_Done_FreeType(library);
-		throw std::runtime_error("Failed to load font file: " + fontPath);
+		LOG_ERROR("Failed to load font file: " + fontPath);
+		exit(-1);
 	}
 
 	FT_Set_Pixel_Sizes(face, 0, size);
@@ -158,14 +159,6 @@ void TextRenderer::drawText(DrawContext* context, const std::string& text, float
 	this->drawText(context, text, x, y, r, g, b, a);
 }
 
-void TextRenderer::drawText(DrawContext* context, const std::string& text, float x, float y, int argb) {
-	this->drawText(context, text, x, y, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb));
-}
-
-void TextRenderer::drawText(DrawContext* context, const std::string& text, float x, float y, int argb, bool hasShadow) {
-	this->drawText(context, text, x, y, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb), hasShadow);
-}
-
 void TextRenderer::drawTextInternal(DrawContext* context, std::string& text, float x, float y, int r, int g, int b, int a) {
 	if (text.empty()) return;
 
@@ -208,7 +201,7 @@ void TextRenderer::drawTextInternal(DrawContext* context, std::string& text, flo
 				x1, y1, s1, t2,
 				x1, y2, s1, t1,
 				x2, y2, s2, t1,
-				
+
 				x2, y2, s2, t1,
 				x2, y1, s2, t2,
 				x1, y1, s1, t2,

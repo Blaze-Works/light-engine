@@ -1,5 +1,6 @@
 #pragma once
 
+#include <color/Color.hpp>
 #include <texture/Texture.hpp>
 
 #include <map>
@@ -32,9 +33,9 @@ public:
 	int getHeight(const std::string& text);
 	std::shared_ptr<Texture> getTexture();
 	void drawText(DrawContext* context, const std::string& text, float x, float y, int r, int g, int b, int a);
-	void drawText(DrawContext* context, const std::string& text, float x, float y, int r, int g, int b, int a, bool useShadow);
-	void drawText(DrawContext* context, const std::string& text, float x, float y, int argb);
-	void drawText(DrawContext* context, const std::string& text, float x, float y, int argb, bool useShadow);
+	void drawText(DrawContext* context, const std::string& text, float x, float y, int r, int g, int b, int a, bool hasShadow);
+	void drawText(DrawContext* context, const std::string& text, float x, float y, int argb, bool hasShadow = false) { this->drawText(context, text, x, y, Argb::getRed(argb), Argb::getGreen(argb), Argb::getBlue(argb), Argb::getAlpha(argb)); }
+	void drawText(DrawContext* context, const std::string& text, float x, float y, Color color, bool hasShadow = false) { this->drawText(context, text, x, y, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha(), hasShadow); } 
 
 private:
 	int fontHeight;

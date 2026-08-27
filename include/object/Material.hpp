@@ -1,6 +1,6 @@
 #pragma once
 
-#include <color/Argb.hpp>
+#include <color/Color.hpp>
 #include <texture/Texture.hpp>
 
 #include <glm/glm.hpp>
@@ -24,14 +24,13 @@ public:
 
 	Material() = default;
 	explicit Material(const glm::vec4& color) : color(color) {}
+	explicit Material(Color& color) : color(color.getColor() / 255.0f) {}
 	explicit Material(int argb) {
-		float a = Argb::getAlpha(argb) / 255.0f;
-		float r = Argb::getRed(argb) / 255.0f;
-		float g = Argb::getGreen(argb) / 255.0f;
-		float b = Argb::getBlue(argb) / 255.0f;
-		color = glm::vec4(r, g, b, a);
-		opacity = a;
+		Color color(argb);
+		this->color = color.getColor() / 255.0f;
+		this->opacity = color.getAlpha() / 255.0f;;
 	}
+
 };
 
 } // namespace blaze::lightEngine

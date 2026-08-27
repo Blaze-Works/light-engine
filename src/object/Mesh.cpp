@@ -50,7 +50,7 @@ void Mesh::upload() {
 		glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(attr->byteLength()), attr->data(), GL_STATIC_DRAW);
 		glEnableVertexAttribArray(location);
 		glVertexAttribPointer(location, attr->itemSize, GL_FLOAT, attr->normalized ? GL_TRUE : GL_FALSE, 0, nullptr);
-		
+
 		return true;
 	};
 

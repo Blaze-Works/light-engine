@@ -60,23 +60,24 @@ void LightEngine::initialize() {
 	this->onWindowFocusChanged(true);
 }
 
-void LightEngine::sync(int fps) {
-	double lastLoopTime = this->timer.getLastLoopTime();
-	double now = this->timer.getTime();
-	float targetTime = 1.0f / fps;
-	double timeRemaining = targetTime - (now - lastLoopTime);
+void LightEngine::sync(int targetRate, double& lastTime, Timer& timer) {
+	double now = timer.getTime();
+	float targetTime = 1.0f / targetRate;
+	double timeRemaining = targetTime - (now - lastTime);
 
 	while (timeRemaining > 0.002) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		now = this->timer.getTime();
-		timeRemaining = targetTime - (now - lastLoopTime);
+		now = timer.getTime();
+		timeRemaining = targetTime - (now - lastTime);
 	}
 
 	while (timeRemaining > 0.0) {
 		std::this_thread::yield();
-		now = this->timer.getTime();
-		timeRemaining = targetTime - (now - lastLoopTime);
+		now = timer.getTime();
+		timeRemaining = targetTime - (now - lastTime);
 	}
+
+	lastTime = timer.getTime();
 }
 
 bool LightEngine::getFullscreen() {
@@ -132,7 +133,7 @@ bool LightEngine::forcesUnicodeFont() const {
 }
 
 int LightEngine::getFramerateLimit() {
-	return 200;
+	return this->targetFPS;
 }
 
 void LightEngine::onResolutionChanged() {
@@ -217,6 +218,7 @@ void LightEngine::runSingleThread() {
 	float accumulator = 0.0f;
 	float interval = 1.0f;
 	float alpha;
+	double lastTime;
 
 	this->onResolutionChanged();
 
@@ -226,11 +228,12 @@ void LightEngine::runSingleThread() {
 		while (this->running && !this->window.shouldClose()) {
 			delta = this->timer.getDelta();
 			accumulator += delta;
+			lastTime = this->timer.getTime();
 
 			if (delta > 0.25f) delta = 0.25f;
 
 			while (accumulator >= interval) {
-				this->update();
+				this->update(1.0f / static_cast<float>(this->timer.getUPS()));
 				this->timer.updateUPS();
 				accumulator -= interval;
 			}
@@ -243,7 +246,7 @@ void LightEngine::runSingleThread() {
 			Mouse::update(this->window.getHandle());
 
 			try {
-				this->render(alpha);
+				this->render(delta);
 			} catch (const std::exception& ex) {
 				throw std::runtime_error(std::string("Render Exception: ") + ex.what());
 			}
@@ -251,7 +254,7 @@ void LightEngine::runSingleThread() {
 			this->timer.updateFPS();
 			this->timer.update();
 			this->window.swapBuffers();
-			if (!this->window.isVsyncEnabled()) this->sync(this->targetFPS);
+			if (!this->window.isVsyncEnabled()) this->sync(this->targetFPS, lastTime, this->timer);
 			if (this->shouldStop) this->stop();
 
 		}
@@ -261,18 +264,20 @@ void LightEngine::runSingleThread() {
 }
 
 void LightEngine::runMultiThread() {
+	double lastTime;
 	this->onResolutionChanged();
 
-	std::thread updateThread(&LightEngine::runUpdateLoop, this);
+	std::thread updateThread(&LightEngine::runUpdateLoop, this, std::ref(this->timer));
 
 	try {
 		while (this->running && !this->window.shouldClose()) {
+			lastTime = this->timer.getTime();
 			this->window.pollEvents();
 			Keyboard::update(this->window.getHandle());
 			Mouse::update(this->window.getHandle());
 
 			try {
-				this->render(alphaBuffer);
+				this->render(this->timer.getDelta());
 			} catch (const std::exception& ex) {
 				this->running = false;
 				if (updateThread.joinable()) updateThread.join();
@@ -280,9 +285,10 @@ void LightEngine::runMultiThread() {
 			}
 
 			this->timer.updateFPS();
+			this->timer.update();
 			this->window.swapBuffers();
 
-			if (!this->window.isVsyncEnabled()) this->sync(this->targetFPS);
+			if (!this->window.isVsyncEnabled()) this->sync(this->targetFPS, lastTime, this->timer);
 			if (this->shouldStop) this->running = false;
 		}
 	} catch (const std::exception& ex) {
@@ -296,33 +302,20 @@ void LightEngine::runMultiThread() {
 	this->stop();
 }
 
-void LightEngine::runUpdateLoop() {
-	float delta;
-	float accumulator = 0.0f;
+void LightEngine::runUpdateLoop(Timer& timer) {
 	float interval = 1.0f / static_cast<float>(this->targetUPS > 0 ? this->targetUPS : 1);
 
+	double localLastUpdateTime = timer.getTime();
+
 	while (this->running) {
-		delta = this->timer.getDelta();
-		if (delta > 0.25f) delta = 0.25f;
-
-		accumulator += delta;
-
-		while (accumulator >= interval) {
-			this->update();
-			this->timer.updateUPS();
-			accumulator -= interval;
-		}
-
-		float alpha = accumulator / interval;
-		alphaBuffer = alpha;
-
-		this->timer.update();
-		this->sync(1.0f/interval);
+		this->update(timer.getDelta());
+		timer.updateUPS();
+		this->sync(this->targetUPS, localLastUpdateTime, timer);
 	}
 }
 
-void LightEngine::update() {
-	for (auto& cb : this->updateCallbacks) cb.second(1.0f / static_cast<float>(this->targetUPS > 0 ? this->targetUPS : 1));
+void LightEngine::update(float delta) {
+	for (auto& cb : this->updateCallbacks) cb.second(delta);
 
 	if (this->screenStack.empty()) return;
 
@@ -330,12 +323,12 @@ void LightEngine::update() {
 		Screen* screen = it->get();
 		if (!screen) continue;
 
-		screen->update(1.0f / static_cast<float>(this->targetUPS > 0 ? this->targetUPS : 1));
+		screen->update(delta);
 		if (screen->shouldPause()) break;
 	}
 }
 
-void LightEngine::render(float alpha) {
+void LightEngine::render(float delta) {
 	if (!this->framebuffer->isValid()) return;
 	if (this->framebuffer->getWidth() < 1 || this->framebuffer->getHeight() < 1) return;
 
@@ -344,9 +337,9 @@ void LightEngine::render(float alpha) {
 
 	try {
 		this->framebuffer->beginWrite(true);
-		for (auto& cb : this->renderCallbacks) cb.second(*this->drawContext.get(), this->mouseX, this->mouseY, alpha);
-		for (auto& screen : this->screenStack) screen->render(*this->drawContext.get(), this->mouseX, this->mouseY, alpha);
-		if (this->runArgs.useDebug) this->drawDebug(alpha);
+		for (auto& cb : this->renderCallbacks) cb.second(*this->drawContext.get(), this->mouseX, this->mouseY, delta);
+		for (auto& screen : this->screenStack) screen->render(*this->drawContext.get(), this->mouseX, this->mouseY, delta);
+		if (this->runArgs.useDebug) this->drawDebug(delta);
 		this->drawContext->flushTextureBatch();
 		this->framebuffer->endWrite();
 	} catch (const std::exception& ex) {
@@ -361,7 +354,7 @@ void LightEngine::render(float alpha) {
 	this->window.setPhase("Post render");
 }
 
-void LightEngine::drawDebug(float alpha) {
+void LightEngine::drawDebug(float delta) {
 	int fps = this->timer.getFPS();
 	int ups = this->timer.getUPS();
 	int time = static_cast<int>(this->timer.getTime());
@@ -399,7 +392,7 @@ void LightEngine::drawDebug(float alpha) {
 		std::string("Context: ") + this->window.getContext() +
 		std::string("\nFPS: ") + std::to_string(fps) + std::string(" | UPS: ") + std::to_string(ups) +
 		std::string("\nMax FPS: ") + std::to_string(maxFPS) + std::string(" | Avg FPS: ") + std::to_string(avgFPS) + std::string(" | Min FPS: ") + std::to_string(minFPS) +
-		std::string("\nFrames Count: ") + std::to_string(frames) + std::string("\nRun Time: ") + std::to_string(time) + std::string(" | Alpha: ") + std::to_string(alpha)
+		std::string("\nFrames Count: ") + std::to_string(frames) + std::string("\nRun Time: ") + std::to_string(time) + std::string(" | Delta: ") + std::to_string(delta)
 	);
 
 	_x = MathUtils::clamp((int) this->mouseX, 0, (int) (w - textWidth + 6));
