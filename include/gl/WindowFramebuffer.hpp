@@ -2,12 +2,13 @@
 
 #include <gl/Framebuffer.hpp>
 
+#include <array>
 #include <string>
 #include <vector>
 
 namespace blaze::lightEngine {
 
-enum Attachment {
+enum Attachment: uint8_t {
 	NONE        = 0,
 	COLOR       = 1,
 	DEPTH       = 2,
@@ -40,6 +41,7 @@ struct AttachmentHelper {
 			case Attachment::DEPTH:       return "DEPTH";
 			case Attachment::COLOR_DEPTH: return "COLOR_DEPTH";
 		}
+		return "UNKNOWN";
 	}
 };
 
