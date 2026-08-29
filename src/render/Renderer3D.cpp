@@ -162,6 +162,7 @@ void Renderer3D::renderObject(Mesh& mesh, Camera& camera) {
 		mesh.draw();
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	} else {
+		mesh.updateMorphTargets();
 		mesh.draw();
 	}
 

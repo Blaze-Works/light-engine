@@ -9,7 +9,7 @@
 #include <iostream>
 
 namespace bl = blaze::lightEngine;
-
+static int i = 0;
 static bl::LightEngine* g_engine;
 bl::Renderer3D renderer;
 bl::Scene scene;

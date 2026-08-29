@@ -6,6 +6,7 @@
 
 #include <gl/glad.h>
 #include <memory>
+#include <vector>
 
 namespace blaze::lightEngine {
 
@@ -15,6 +16,8 @@ public:
 	std::shared_ptr<Material> material;
 	std::shared_ptr<Skin> skin;
 
+	std::vector<float> morphTargetInfluences;
+
 	Mesh() = default;
 	Mesh(std::shared_ptr<BufferGeometry> geometry, std::shared_ptr<Material> material);
 	~Mesh() override;
@@ -23,6 +26,7 @@ public:
 	Mesh& operator=(const Mesh&) = delete;
 
 	void upload();
+	void updateMorphTargets();
 	void draw() const;
 	void dispose();
 
@@ -30,7 +34,10 @@ public:
 	bool isSkinned() const { return this->skin != nullptr && this->hasJoints && this->hasWeights; }
 	bool hasJointAttrs() const { return this->hasJoints; }
 	bool hasWeightAttrss() const { return this->hasWeights; }
+	bool hasMorphTargets() const;
 
+	void setMorphInfluences(const std::vector<float>& influences);
+	void setMorphInfluence(size_t index, float value);
 
 	BoundingSphere getWorldBoundingSphere() const;
 	BoundingBox getWorldBoundingBox() const;
@@ -54,9 +61,16 @@ private:
 	bool hasJoints = false;
 	bool hasWeights = false;
 	bool uploaded = false;
+	bool morphNeedsUpdate = true;
+
+	std::vector<float> basePosition;
+	std::vector<float> baseNormal;
+	bool morphBaseCached = false;
 
 	void createBuffers();
 	void destroyBuffers();
+	void cacheMorphBase();
+	void uploadPositionNormal(const std::vector<float>& pos, const std::vector<float>* normal);
 };
 
 } // namespace blaze::lightEngine

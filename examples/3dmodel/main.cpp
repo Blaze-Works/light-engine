@@ -16,10 +16,9 @@ float angle = 0;
 int r = 5;
 
 static bl::LightEngine* g_engine;
-std::vector<std::shared_ptr<bl::Texture>>* tex;
 bl::Renderer3D renderer;
 bl::Scene scene;
-bl::PerspectiveCamera camera(75, 0, 0.1f, 1000);
+bl::PerspectiveCamera camera;
 bl::GLTFLoader loader;
 
 void init(bl::Window& window) {
@@ -49,13 +48,12 @@ void init(bl::Window& window) {
 }
 
 void update(float delta) {
-	angle += PI * delta / 10;
+	angle += PI / 8 * delta;
 	float px = std::cos(angle) * r;
 	float pz = std::sin(angle) * r;
 
 	camera.position = {px, r, pz};
 	camera.lookAt(0, 0, 0);
-
 }
 
 void render(bl::DrawContext& ctx, int x, int y, float delta) {
@@ -71,12 +69,13 @@ int main() {
 	bl::LightEngine engine(args);
 	g_engine = &engine;
 
-	engine.getDrawContext()->loadDebugFont(bl::PathUtil::resolveResource("monospace.ttf"));
+	engine.getDrawContext()->loadDebugFont(bl::PathUtil::resolveResource("fonts/monospace.ttf"));
 	engine.initialize();
 
 	init(engine.getWindow());
-	engine.addRenderCallback(render);
 	engine.addUpdateCallback(update);
+	engine.addRenderCallback(render);
+
 	engine.run();
 
 	if (!engine.isRunning()) {

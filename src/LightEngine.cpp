@@ -233,7 +233,8 @@ void LightEngine::runSingleThread() {
 			if (delta > 0.25f) delta = 0.25f;
 
 			while (accumulator >= interval) {
-				this->update(1.0f / static_cast<float>(this->timer.getUPS()));
+				float dt = 1.0f / static_cast<float>(this->timer.getUPS());
+				this->update(!std::isinf(dt) ? dt : interval);
 				this->timer.updateUPS();
 				accumulator -= interval;
 			}

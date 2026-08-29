@@ -215,6 +215,25 @@ void applyNodeTransform(Object3D& obj, const json& node) {
 	obj.updateMatrix();
 }
 
+void applyDefaultMorphWeights(Mesh& mesh, const json& meshDef, const json& node) {
+	size_t nTargets = 0;
+	if (mesh.geometry) {
+		auto it = mesh.geometry->morphAttributes.find("position");
+		if (it != mesh.geometry->morphAttributes.end()) nTargets = it->second.size();
+	}
+
+	if (nTargets == 0) return;
+	mesh.morphTargetInfluences.assign(nTargets, 0.0f);
+
+	if (node.contains("weights") && node["weights"].is_array()) {
+		for (size_t i = 0; i < nTargets && i < node["weights"].size(); i++) mesh.morphTargetInfluences[i] = node["weights"][i].get<float>();
+	} else if (meshDef.contains("weights") && meshDef["weights"].is_array()) {
+		for (size_t i = 0; i < nTargets && i < meshDef["weights"].size(); i++) mesh.morphTargetInfluences[i] = meshDef["weights"][i].get<float>();
+	}
+
+	mesh.setMorphInfluences(mesh.morphTargetInfluences);
+}
+
 std::shared_ptr<BufferGeometry> buildGeometry(const json& root, const std::vector<unsigned char>& bin, const json& prim) {
 	auto geo = std::make_shared<BufferGeometry>();
 	const json& attrs = prim.at("attributes");
@@ -224,6 +243,22 @@ std::shared_ptr<BufferGeometry> buildGeometry(const json& root, const std::vecto
 	if (attrs.contains("TEXCOORD_0")) geo->setAttribute("uv", BufferAttribute(readFloatAccessor(root, bin, attrs["TEXCOORD_0"].get<int>()), 2));
 	if (attrs.contains("JOINTS_0"))   geo->setAttribute("joints", BufferAttribute(readFloatAccessor(root, bin, attrs["JOINTS_0"].get<int>()), 4));
 	if (attrs.contains("WEIGHTS_0"))  geo->setAttribute("weights", BufferAttribute(readFloatAccessor(root, bin, attrs["WEIGHTS_0"].get<int>()), 4));
+
+	if (prim.contains("target") && prim["targets"].is_array()) {
+		geo->morphTargetsRelative = true;
+		for (const auto& target : prim["target"]) {
+			if (target.contains("POSITION")) {
+				auto data = readFloatAccessor(root, bin, target["POSITION"].get<int>());
+				geo->morphAttributes["position"].push_back(BufferAttribute(std::move(data), 3));
+			}
+
+			if (target.contains("NORMAL")) {
+				auto data = readFloatAccessor(root, bin, target["NORMAL"].get<int>());
+				geo->morphAttributes["normal"].push_back(BufferAttribute(std::move(data), 3));
+			}
+		}
+	}
+
 	if (prim.contains("indices"))     geo->setIndex(readIndexAccessor(root, bin, prim["indices"].get<int>()));
 	if (!geo->hasAttribute("normal") && geo->hasAttribute("position")) geo->computeVertexNormals();
 
@@ -412,6 +447,7 @@ GLTFModel GLTFLoader::loadFromMemory(const unsigned char* data, size_t size, con
 					if (node.contains("name")) mesh->name = node["name"].get<std::string>();
 					else if (meshDef.contains("name")) mesh->name = meshDef["name"].get<std::string>();
 
+					applyDefaultMorphWeights(*mesh, meshDef, node);
 					applyNodeTransform(*mesh, node);
 					nodePtrs[i] = mesh.get();
 					obj = std::move(mesh);
@@ -506,7 +542,7 @@ GLTFModel GLTFLoader::loadFromMemory(const unsigned char* data, size_t size, con
 				int midx = prim.value("material", -1);
 				auto mat = (midx >= 0 && midx < int(materials.size())) ? materials[midx] : defaultMat;
 				auto mesh = std::make_unique<Mesh>(geo, mat);
-
+				
 				if (meshDef.contains("name")) mesh->name = meshDef["name"].get<std::string>();
 				Object3D* ptr = mesh.get();
 				model.ownedNodes.push_back(std::move(mesh));
@@ -616,16 +652,18 @@ GLTFModel GLTFLoader::loadFromMemory(const unsigned char* data, size_t size, con
 
 				// CUBICSPLINE stores 3x values per key (in-tangent, value, out-tangent) — extract middle for now
 				if (track.interpolation == AnimationInterpolation::CubicSpline && !track.times.empty()) {
-					int comps = (track.path == AnimationPath::Rotation) ? 4 : 3;
-					if (track.path == AnimationPath::Weights) {
-						// skip morph for now
-						continue;
-					}
 					size_t keys = track.times.size();
-					std::vector<float> extracted;
-					extracted.reserve(keys * size_t(comps));
-					// layout: for each key: [in_tangent (comps), value (comps), out_tangent (comps)]
-					if (track.values.size() >= keys * size_t(comps) * 3) {
+
+					int comps;
+					if (track.path == AnimationPath::Rotation) comps =  4;
+					else if (track.path == AnimationPath::Weights) comps = (keys > 0) ? static_cast<int>(track.values.size() / (keys * 3)) : 0;
+					else comps = 3;
+
+					if (comps > 0 && track.values.size() >= keys * size_t(comps) * 3) {
+						size_t keys = track.times.size();
+						std::vector<float> extracted;
+						extracted.reserve(keys * size_t(comps));
+
 						for (size_t k = 0; k < keys; k++) {
 							size_t base = k * size_t(comps) * 3 + size_t(comps); // skip in-tangent
 							for (int c = 0; c < comps; c++) extracted.push_back(track.values[base + c]);

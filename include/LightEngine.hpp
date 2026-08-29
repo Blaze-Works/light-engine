@@ -1,5 +1,19 @@
 #pragma once
 
+#if defined(LIGHT_ENGINE_STATIC)
+	#define LIGHT_API
+#else
+	#ifdef _WIN32
+		#ifdef LIGHT_ENGINE_EXPORT
+			#define LIGHT_API __declspec(dllexport)
+		#else
+			#define LIGHT_API __declspec(dllimport)
+		#endif
+	#else
+		#define LIGHT_API __attribute__((visibility("default")))
+	#endif
+#endif
+
 #include <cstddef>
 #include <string>
 #include <thread>

@@ -5,7 +5,6 @@
 
 namespace blaze::lightEngine {
 
-
 std::string MathUtils::generateUUID() {
 	static thread_local std::mt19937 rng{std::random_device{}()};
 	static thread_local std::uniform_int_distribution<int> dist(0, 15);

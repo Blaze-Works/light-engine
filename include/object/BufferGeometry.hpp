@@ -28,6 +28,9 @@ public:
 
 	std::vector<unsigned int> index;
 	std::unordered_map<std::string, BufferAttribute> attributes;
+	std::unordered_map<std::string, std::vector<BufferAttribute>> morphAttributes;
+	bool morphTargetsRelative = true;
+
 	std::vector<GeometryGroup> groups;
 	DrawRange drawRange;
 

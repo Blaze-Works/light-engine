@@ -58,9 +58,6 @@ void render(bl::DrawContext& ctx, int, int, float) {
 	ctx.drawDebugText(0, bl::LightEngine::getInstance().getWindow().getHeight() - ctx.getDebugTextHeight(text) - 20, text);
 }
 
-void update(float) {
-}
-
 int main () {
 	bl::RunArgs args;
 	args.useDebug = true;
@@ -72,7 +69,6 @@ int main () {
 
 	init(engine.getWindow());
 	engine.addRenderCallback(render);
-	engine.addUpdateCallback(update);
 
 	engine.run();
 	if (!engine.isRunning()) {

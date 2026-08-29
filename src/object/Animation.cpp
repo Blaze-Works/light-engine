@@ -1,4 +1,5 @@
 #include <object/Animation.hpp>
+#include <object/Mesh.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -65,8 +66,37 @@ void AnimationPlayer::sampleTrack(const AnimationTrack& track, float t) {
 			track.target->quaternion = glm::normalize(glm::slerp(a, b, alpha));
 			break;
 		}
-		case AnimationPath::Weights:
+		case AnimationPath::Weights: {
+			if (track.times.empty()) break;
+			const size_t keyCount = track.times.size();
+			const size_t targetCount = track.values.size() / keyCount;
+			if (targetCount == 0) break;
+
+			auto atWeights = [&](int key) -> const float* {
+				return track.values.data() + static_cast<size_t>(key) * targetCount;
+			};
+
+			const float* a = atWeights(i0);
+			const float* b = atWeights(i1);
+
+			auto applyToMesh = [&](Mesh* mesh) {
+				if (!mesh) return;
+				if (mesh->morphTargetInfluences.size() < targetCount) mesh->morphTargetInfluences.resize(targetCount, 0.0f);
+				for (size_t i = 0; i < targetCount; i++) mesh->morphTargetInfluences[i] = a[i] * (1.0f - alpha) + b[i] * alpha;
+				mesh->setMorphInfluence(0, mesh->morphTargetInfluences[0]);
+			};
+
+			if (auto* mesh = dynamic_cast<Mesh*>(track.target)) applyToMesh(mesh);
+			else if (track.target) {
+				for (Object3D* child : track.target->children) applyToMesh(dynamic_cast<Mesh*>(child));
+
+				track.target->traverse([&](Object3D* obj) {
+					applyToMesh(dynamic_cast<Mesh*>(obj));
+				});
+			}
+
 			break;
+		}
 	}
 
 	track.target->updateMatrix();
