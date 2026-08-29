@@ -14,6 +14,35 @@ enum Attachment {
 	COLOR_DEPTH = 3
 };
 
+inline Attachment operator|(Attachment lhs, Attachment rhs) {
+	return static_cast<Attachment>(
+		static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs)
+	);
+}
+
+struct AttachmentHelper {
+	static constexpr std::array<Attachment, 4> VALUES = {
+		Attachment::NONE,
+		Attachment::COLOR,
+		Attachment::DEPTH,
+		Attachment::COLOR_DEPTH
+	};
+
+	static Attachment with(Attachment current, Attachment other) {
+		size_t index = static_cast<size_t>(current) | static_cast<size_t>(other);
+		return VALUES.at(index);
+	}
+
+	static std::string name(Attachment attachment) {
+		switch (attachment) {
+			case Attachment::NONE:        return "NONE";
+			case Attachment::COLOR:       return "COLOR";
+			case Attachment::DEPTH:       return "DEPTH";
+			case Attachment::COLOR_DEPTH: return "COLOR_DEPTH";
+		}
+	}
+};
+
 struct Size {
 	int width;
 	int height;

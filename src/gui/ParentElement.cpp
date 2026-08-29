@@ -125,11 +125,11 @@ std::shared_ptr<GuiNavigationPath> ParentElement::computeNavigationPath(const Gu
 	std::function<Element*()> supplier = tempSupplier;
 	std::shared_ptr<GuiNavigationPath> guiNavigationPath;
 	do {
-		if (!boolSupplier.target<bool>()) {
+		if (!boolSupplier()) {
 			return nullptr;
 		}
 
-		Element* element2 = supplier.target<Element>();
+		Element* element2 = supplier();
 		guiNavigationPath = element2->getNavigationPath(navigation);
 	} while (guiNavigationPath == nullptr);
 
