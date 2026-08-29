@@ -14,6 +14,12 @@ find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 find_package(FreeType QUIET)
 
+if (TARGET glfw3)
+	set(GLFW_LIBRARY glfw3)
+else()
+	set(GLFW_LIBRARY glfw)
+endif()
+
 if (NOT Freetype_FOUND)
 	find_package(PkgConfig REQUIRED)
 	pkg_check_modules(FREETYPE REQUIRED freetype2)
@@ -48,7 +54,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${GLFW_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-	glfw
+	${GLFW_LIBRARY}
 	OpenGL::GL
 	glm::glm
 PUBLIC

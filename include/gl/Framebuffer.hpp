@@ -3,6 +3,8 @@
 #include <gl/glad.h>
 #include <gl/ShaderProgram.hpp>
 
+#include <memory>
+
 namespace blaze::lightEngine {
 
 class Framebuffer {

@@ -632,7 +632,7 @@
         GL_WIN_specular_fog
     Loader: True
     Local files: False
-    Omit khrplatform: False
+    Omitkhrplatform: False
     Reproducible: False
 
     Commandline:

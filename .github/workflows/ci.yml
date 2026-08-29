@@ -1,0 +1,83 @@
+name: CMake CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  VCPKG_BINARY_SOURCES: "clear;nuget,GitHub,readwrite"
+
+jobs:
+  build:
+    name: ${{ matrix.os }} (${{ matrix.build_type }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build_type: [Release, Debug]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Set up C++ Environment
+      uses: aminya/setup-cpp@v1
+      with:
+        cmake: true
+        ninja: true
+        ccache: true
+
+    - name: Install System Graphics Dependencies
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libglfw3-dev libglm-dev libfreetype6-dev xorg-dev xvfb
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          brew install glfw freetype glm
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          # Use pre-installed vcpkg on Windows runner to firmly install the missing libs
+          vcpkg install glfw3:x64-windows glm:x64-windows freetype:x64-windows
+        fi
+      shell: bash
+
+    - name: Configure ccache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ccache
+        key: ${{ matrix.os }}-${{ matrix.build_type }}-ccache-${{ github.sha }}
+        restore-keys: |
+          ${{ matrix.os }}-${{ matrix.build_type }}-ccache-
+
+    - name: Configure CMake
+      shell: bash
+      run: |
+        # Generate specific toolchain flag ONLY for Windows platform
+        EXTRA_FLAGS=""
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          EXTRA_FLAGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+        fi
+
+        cmake -B ${{ github.workspace }}/build \
+          -G Ninja \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          $EXTRA_FLAGS
+
+    - name: Build Project
+      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
+
+    - name: Run Tests
+      working-directory: ${{ github.workspace }}/build
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          xvfb-run ctest -C ${{ matrix.build_type }} --output-on-failure
+        else
+          ctest -C ${{ matrix.build_type }} --output-on-failure
+        fi
+      shell: bash
