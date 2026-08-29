@@ -50,7 +50,7 @@ jobs:
           # Use pre-installed vcpkg on Windows runner to firmly install the missing libs
           vcpkg install glfw3:x64-windows glm:x64-windows freetype:x64-windows
         fi
-      shell: ${{ runner.os == 'Windows' && 'powershell' || 'bash' }}
+      shell: bash
 
     - name: Configure ccache
       uses: actions/cache@v4
@@ -61,7 +61,7 @@ jobs:
           ${{ matrix.os }}-${{ matrix.build_type }}-ccache-
 
     - name: Configure CMake
-      shell: ${{ runner.os == 'Windows' && 'powershell' || 'bash' }}
+      shell: bash
       run: |
         # Generate specific toolchain flag ONLY for Windows platform
         EXTRA_FLAGS=""
@@ -86,4 +86,4 @@ jobs:
         else
           ctest -C ${{ matrix.build_type }} --output-on-failure
         fi
-      shell: ${{ runner.os == 'Windows' && 'powershell' || 'bash' }}
+      shell: bash
