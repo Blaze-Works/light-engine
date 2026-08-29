@@ -1,5 +1,7 @@
 #include <gui/ScreenPos.hpp>
 
+#include <stdexcept>
+
 namespace blaze::lightEngine {
 
 ScreenPos::ScreenPos(int x, int y): x(x), y(y) {}

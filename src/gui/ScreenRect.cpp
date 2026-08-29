@@ -1,5 +1,7 @@
 #include <gui/ScreenRect.hpp>
 
+#include <stdexcept>
+
 namespace blaze::lightEngine {
 
 const ScreenRect* ScreenRect::emptyRect = new ScreenRect(0, 0, 0, 0);

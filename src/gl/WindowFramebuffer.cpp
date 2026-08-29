@@ -1,6 +1,7 @@
 #include <gl/WindowFramebuffer.hpp>
 #include <texture/TextureUtil.hpp>
 
+#include <stdexcept>
 #include <string>
 
 namespace blaze::lightEngine {
