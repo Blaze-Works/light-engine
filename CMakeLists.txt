@@ -1,4 +1,4 @@
-ycmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.14)
 project(light_engine VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -9,7 +9,7 @@ option(BUILD_SHARED_LIBS "Build shared/dynamic libraries instead of static" OFF)
 option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
 option(INCLUDE_EXAMPLES "Build example applications" ON)
 
-find_package(glfw3 CONFIG REQUIRED)
+find_package(glfw3 3.3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 find_package(FreeType QUIET)
@@ -23,6 +23,14 @@ if (NOT Freetype_FOUND)
 	target_link_libraries(Freetype::Freetype INTERFACE ${FREETYPE_LIBRARIES})
 endif()
 
+file(GLOB_RECURSE ENGINE_SOURCES "src/*.cpp" "src/*.c")
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/resources)
+
+add_library(${PROJECT_NAME} ${ENGINE_SOURCES})
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE LIGHT_ENGINE_EXPORT)
+
 if(BUILD_SHARED_LIBS)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE LIGHT_ENGINE_EXPORT)
 else()
@@ -34,25 +42,13 @@ if(ENABLE_ASAN AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 	target_link_options(${PROJECT_NAME} PUBLIC -fsanitize=address)
 endif()
 
-file(GLOB_RECURSE ENGINE_SOURCES "src/*.cpp" "src/*.c")
-
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/resources)
-
-add_library(${PROJECT_NAME} ${ENGINE_SOURCES})
-
-target_compile_definitions(${PROJECT_NAME} PRIVATE LIGHT_ENGINE_EXPORT)
-
-if (NOT BUILD_SHARED_LIBS)
-	target_compile_definitions(${PROJECT_NAME} PUBLIC LIGHT_ENGINE_EXPORT)
-endif()
-
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${GLFW_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-	${GLFW_LIBRARIES}
+	glfw
 	OpenGL::GL
 	glm::glm
 PUBLIC

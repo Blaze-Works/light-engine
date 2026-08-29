@@ -8,4 +8,4 @@ export MESA_GLSL_VERSION_OVERRIDE=330
 export MESA_DEBUG=1
 
 # Run the program
-GALLIUM_DRIVER=virpipe ./example_animation
+GALLIUM_DRIVER=virpipe ./example_3dmodel
