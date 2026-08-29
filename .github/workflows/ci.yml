@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         build_type: [Release, Debug]
 
     steps:
@@ -33,6 +33,12 @@ jobs:
         ninja: true
         ccache: true
 
+    - name: Configure NuGet for vcpkg
+      if: runner.os == 'Windows'
+      run: |
+        nuget sources add -name GitHub -source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json -username ${{ github.actor }} -password ${{ secrets.GITHUB_TOKEN }}
+      shell: powershell
+
     - name: Install System Graphics Dependencies
       run: |
         if [ "$RUNNER_OS" == "Linux" ]; then
@@ -40,8 +46,11 @@ jobs:
           sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libglfw3-dev libglm-dev libfreetype6-dev xorg-dev xvfb
         elif [ "$RUNNER_OS" == "macOS" ]; then
           brew install glfw freetype glm
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          # Use pre-installed vcpkg on Windows runner to firmly install the missing libs
+          vcpkg install glfw3:x64-windows glm:x64-windows freetype:x64-windows
         fi
-      shell: bash
+      shell: ${{ runner.os == 'Windows' && 'powershell' || 'bash' }}
 
     - name: Configure ccache
       uses: actions/cache@v4
@@ -52,8 +61,14 @@ jobs:
           ${{ matrix.os }}-${{ matrix.build_type }}-ccache-
 
     - name: Configure CMake
-      shell: bash
+      shell: ${{ runner.os == 'Windows' && 'powershell' || 'bash' }}
       run: |
+        # Generate specific toolchain flag ONLY for Windows platform
+        EXTRA_FLAGS=""
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          EXTRA_FLAGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+        fi
+
         cmake -B ${{ github.workspace }}/build \
           -G Ninja \
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
@@ -71,4 +86,4 @@ jobs:
         else
           ctest -C ${{ matrix.build_type }} --output-on-failure
         fi
-      shell: bash
+      shell: ${{ runner.os == 'Windows' && 'powershell' || 'bash' }}
