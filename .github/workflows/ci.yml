@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 env:
-  VCPKG_BINARY_SOURCES: "clear;nuget,GitHub,readwrite"
+  VCPKG_BINARY_SOURCES: "clear;nuget,readwrite"
 
 jobs:
   build:
@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
         build_type: [Release, Debug]
 
     steps:
@@ -40,9 +40,6 @@ jobs:
           sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev libglfw3-dev libglm-dev libfreetype6-dev xorg-dev xvfb
         elif [ "$RUNNER_OS" == "macOS" ]; then
           brew install glfw freetype glm
-        elif [ "$RUNNER_OS" == "Windows" ]; then
-          # Use pre-installed vcpkg on Windows runner to firmly install the missing libs
-          vcpkg install glfw3:x64-windows glm:x64-windows freetype:x64-windows
         fi
       shell: bash
 
@@ -57,12 +54,6 @@ jobs:
     - name: Configure CMake
       shell: bash
       run: |
-        # Generate specific toolchain flag ONLY for Windows platform
-        EXTRA_FLAGS=""
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          EXTRA_FLAGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
-        fi
-
         cmake -B ${{ github.workspace }}/build \
           -G Ninja \
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
