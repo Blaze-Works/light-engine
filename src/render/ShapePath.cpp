@@ -1,6 +1,8 @@
 #include <color/Argb.hpp>
 #include <render/ShapePath.hpp>
 
+#include <cmath>
+
 namespace blaze::lightEngine {
 
 ShapePath::ShapePath(VertexType t): type(t), currentX(0), currentY(0) {}

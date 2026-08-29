@@ -4,6 +4,7 @@
 #include <util/Window.hpp>
 #include <util/math/MathUtils.hpp>
 
+#include <cmath>
 #include <limits>
 
 namespace blaze::lightEngine {

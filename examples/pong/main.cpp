@@ -6,6 +6,7 @@
 #include <util/math/MathUtils.hpp>
 #include <glm/ext/vector_float2.hpp>
 
+#include <cmath>
 #include <iostream>
 #include <random>
 

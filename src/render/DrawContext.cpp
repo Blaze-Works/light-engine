@@ -10,8 +10,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <string>
+#include <cmath>
 #include <memory>
+#include <string>
 
 namespace blaze::lightEngine {
 

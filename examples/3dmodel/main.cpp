@@ -7,6 +7,7 @@
 #include <util/PathUtil.hpp>
 #include <util/math/MathUtils.hpp>
 
+#include <cmath>
 #include <iostream>
 #include <string>
 

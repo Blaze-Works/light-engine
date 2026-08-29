@@ -9,6 +9,7 @@
 #include <util/math/MathUtils.hpp>
 
 #include <chrono>
+#include <cmath>
 #include <exception>
 #include <stdexcept>
 #include <string>

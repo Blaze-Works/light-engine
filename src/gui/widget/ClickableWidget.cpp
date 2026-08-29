@@ -1,7 +1,9 @@
 #include <LightEngine.hpp>
 #include <gui/widget/ClickableWidget.hpp>
 #include <util/math/MathUtils.hpp>
+
 #include <algorithm>
+#include <cmath>
 
 namespace blaze::lightEngine {
 
